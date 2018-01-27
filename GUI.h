@@ -336,6 +336,10 @@ public:
 	}
 	//int create();
 	void(*Event_Text_Change)(Textbox*) = NULL;
+	LPCSTR value(char* r) {
+		GetWindowText(hWnd,r,MAXSIZE);
+		return r;
+	}
 	int create() {
 		hWnd = CreateWindowExA(
 			NULL,
