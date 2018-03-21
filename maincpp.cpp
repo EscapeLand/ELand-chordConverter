@@ -14,7 +14,7 @@ int main() {
 	cv::Mat trimmed = trim(img);
 	bool flag = false;
 	for (int st = trimmed.rows,i = 0; i < trimmed.rows; i++) {
-		//åˆæ­¥è®¾ä¸º0.04 ä»¥åå†è¯´
+		//³õ²½ÉèÎª0.04 ÒÔºóÔÙËµ
 		if (isEmptyLine(trimmed, i, 0.001)) {
 			if (!flag) {
 				st = i;
@@ -23,7 +23,7 @@ int main() {
 		}
 		else {
 			if (flag) {
-				coll.push_back({ st,i - 1 - st });
+				if(i - 1 - st > 0) coll.push_back({ st,i - 1 - st });
 				flag = false;
 			}
 		}
@@ -31,12 +31,12 @@ int main() {
 	bool cat = true;
 	if (coll.size() < 2) {
 		cat = false;
-		std::cout << "è£å‰ªå¤±è´¥ï¼Œç­‰å¾…äºŒæ¬¡è£å‰ª" << std::endl;
-		//äºŒæ¬¡è£å‰ªä¸ºç¼©å‡åˆ¤æ–­ç©ºè¡Œçš„èŒƒå›´ï¼Œä»ä¹‹å‰çš„ä»åƒç´ x=0 è‡³x=colåˆ°æ£€æµ‹åˆ°çš„æ¨ªçº¿çš„x1è‡³x2
+		std::cout << "²Ã¼ôÊ§°Ü£¬µÈ´ı¶ş´Î²Ã¼ô" << std::endl;
+		//¶ş´Î²Ã¼ôÎªËõ¼õÅĞ¶Ï¿ÕĞĞµÄ·¶Î§£¬´ÓÖ®Ç°µÄ´ÓÏñËØx=0 ÖÁx=colµ½¼ì²âµ½µÄºáÏßµÄx1ÖÁx2
 		std::vector<cv::Vec4i> rows;
 		findRow(trimmed,CV_PI/18,rows);
 		if (rows.size() > 5) {
-			std::cout << "äºŒæ¬¡è£å‰ªå¼€å§‹." << std::endl;
+			std::cout << "¶ş´Î²Ã¼ô¿ªÊ¼." << std::endl;
 			flag = false;
 			for (int st = trimmed.rows, i = 0; i < trimmed.rows; i++) {
 				if (isEmptyLine(trimmed, i,std::max(std::min(rows[0][0],rows[0][2]),std::min(rows[5][0],rows[5][2])),
@@ -48,7 +48,7 @@ int main() {
 				}
 				else {
 					if (flag) {
-						coll.push_back({ st,i - 1 - st });
+						if(i-1-st > 0) coll.push_back({ st,i - 1 - st });
 						flag = false;
 					}
 				}
@@ -56,7 +56,7 @@ int main() {
 			
 		}
 		if (coll.size()<2) {
-			std::cout << "äºŒæ¬¡è£å‰ªå¤±è´¥ï¼Œè¯·æ‰‹åŠ¨å¤„ç†" << std::endl;
+			std::cout << "¶ş´Î²Ã¼ôÊ§°Ü£¬ÇëÊÖ¶¯´¦Àí" << std::endl;
 			imshow("WTF", trimmed);
 			cvWaitKey();
 			return 1;
@@ -86,7 +86,7 @@ int main() {
 	
 	bool dog = false;
 	if (toCut.size()>2) {
-		std::cout << "è¿‡æ»¤ç®—æ³•æ­£å¸¸" << std::endl;
+		std::cout << "¹ıÂËËã·¨Õı³£" << std::endl;
 		coll.clear();
 	}
 	else {
@@ -99,13 +99,13 @@ int main() {
 	piece[0] = trimmed(cv::Range(0, toCut[0].start), cv::Range(0, trimmed.cols));
 	for (int i = 1; i < n; i++) {
 		//bug
-		piece[i] = trimmed(cv::Range(toCut[i - 1].start + toCut[i - 1].length + 1, toCut[i].start),
-			cv::Range(0, trimmed.cols));
+		trimmed(cv::Range(toCut[i - 1].start + toCut[i - 1].length + 1, toCut[i].start),
+			cv::Range(0, trimmed.cols)).copyTo(piece[i]);
 	}
 	piece[n] = trimmed(cv::Range(toCut[n - 1].start + toCut[n - 1].length + 1, trimmed.rows), cv::Range(0, trimmed.cols));
 	
 	if (dog && cat) {
-		std::cout << "è¿è¡Œä¿®è¡¥ç®—æ³•" << std::endl;
+		std::cout << "ÔËĞĞĞŞ²¹Ëã·¨" << std::endl;
 		std::vector<space> toJoin;
 		for (int i = 1; i <= n; i++) toJoin.push_back({0,piece[i].rows});
 		bool* b = new bool[toCut.size()+1]();
@@ -122,21 +122,19 @@ int main() {
 		delete[] r;
 		for (size_t i = n; i > 0; i--) {
 			if (!b[i]) {
-				//å°†piece[i]ä¸piece[i-1]æ‹¼æ¥åœ¨ä¸€èµ·
+				//½«piece[i]Óëpiece[i-1]Æ´½ÓÔÚÒ»Æğ
 				vconcat(piece[i-1],piece[i], piece[i - 1]);
 				piece[i].release();
 			}
 		}
 		delete[] b;
 	}
-#define forOCR 0
 	std::vector<cv::Mat> chords;
 	std::vector<cv::Mat> section;
 	std::vector<cv::Mat> info;
 	std::vector<cv::Mat> notes;
-#if forOCR
-	std::vector<cv::Mat> forOCR;
-#endif
+	cv::Mat toOCR;
+
 	flag = false;
 	for (int i = 0; i <= n; i++) {
 		if (piece[i].empty()) continue;
@@ -146,23 +144,39 @@ int main() {
 		if (rows.size() > 5) {													
 			flag = true;
 			chords.push_back(piece[i]);
+			//ÎªOCRÈ¥µôºáÏß
+			//ÓÃĞÎÌ¬Ñ§¸¯Ê´µÃµ½mask ½«maskÉÏµÄµãÖÃ0
+			cv::Mat eroded, dilated;
+			cv::Mat hline = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(piece[i].cols / 30, 1));			//Ë®Æ½½á¹¹
+			erode(255 - piece[i], eroded, hline);																//¸¯Ê´
+			dilate(eroded, dilated, hline);																		//ÅòÕÍ
+			toOCR = cv::max(dilated,piece[i]);
 
 			std::vector<cv::Vec4i> lines;
 			int max = std::min(rows[5][1],rows[5][3]);
 			int min = std::max(rows[0][1],rows[0][3]);
-			findCol(piece[i], CV_PI / 18 * 8, max , min , lines);
+			findCol(toOCR, CV_PI / 18 * 8, max , min , lines);
 			for (int j = 0; j < (int)lines.size() - 1; j++) {
-				section.push_back(piece[i](cv::Range(0, piece[i].rows), cv::Range(lines[j][0]+1, lines[j + 1][0])).clone());
+				section.push_back(toOCR(cv::Range(0, piece[i].rows), cv::Range(lines[j][0] + 1, lines[j + 1][0])).clone());
+
+				std::vector<std::vector<cv::Point>> cont;
+				cv::Mat ccolor;
+				cv::Mat inv = 255 - section.back();
+				cvtColor(section.back(), ccolor, CV_GRAY2BGR);
+				cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+				for (int j = 0; j < cont.size(); j++) {
+					int r = 0, l = 999999, d = 0, u = 999999;
+					for (int k = 0; k < cont[j].size(); k++) {
+						l = std::min(l, cont[j][k].x);
+						r = std::max(r, cont[j][k].x);
+						u = std::min(u, cont[j][k].y);
+						d = std::max(d, cont[j][k].y);
+					}
+					if(d - u < rows[1][1] - rows[0][1]
+						&& d - u > r - l)
+						savePic("C:\\Users\\Administrator\\Desktop\\oh\\", section.back()(cv::Range(u, d+1), cv::Range(l, r+1)));
+				}
 			}
-#if forOCR
-			//ä¸ºOCRå»æ‰æ¨ªçº¿
-			//ç”¨å½¢æ€å­¦è…èš€å¾—åˆ°mask å°†maskä¸Šçš„ç‚¹ç½®0
-			cv::Mat eroded, dilated;
-			cv::Mat hline = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 1));			//æ°´å¹³ç»“æ„
-			erode(255 - piece[i], eroded, hline);												//è…èš€
-			dilate(eroded, dilated, hline);														//è†¨èƒ€
-			forOCR.push_back(cv::max(dilated, piece[i]));
-#endif
 		}
 		else {
 			if(flag) notes.push_back(piece[i]);
@@ -170,13 +184,13 @@ int main() {
 		}
 	}
 	delete[] piece;
-	for (cv::Mat& i : info) {
+	/*for (cv::Mat& i : info) {
 		imshow("info",i);
 		cvWaitKey();
 	}
 	cvDestroyWindow("info");
-	for (int i = 0; i < section.size();i++) {
-		imshow("section",section[i]);
+	for (cv::Mat& i : section) {
+		imshow("section",i);
 		cvWaitKey();
 	}
 	cvDestroyWindow("section");
@@ -185,6 +199,6 @@ int main() {
 		cvWaitKey();
 	}
 	cvWaitKey();
-	cvDestroyAllWindows();
+	cvDestroyAllWindows();*/
 }
 

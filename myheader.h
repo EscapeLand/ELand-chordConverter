@@ -15,6 +15,7 @@ extern bool isEmptyLine(cv::Mat img, int y, int from, int to, double rate);
 extern cv::Mat trim(cv::Mat img, double threshold = 0.01);
 extern void findRow(cv::Mat img, double rangeTheta, std::vector<cv::Vec4i> &lines);
 extern void findCol(cv::Mat img, double rangeTheta, int upper,int lower, std::vector<cv::Vec4i> &lines);
+extern void savePic(std::string folder, cv::Mat pic);
 typedef struct _space {
 	int start;
 	int length;
