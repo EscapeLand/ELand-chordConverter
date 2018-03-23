@@ -13,6 +13,7 @@ using namespace cv;
 using namespace cv::ml;
 
 cv::Ptr<cv::ml::KNearest> &load(std::string csv, Ptr<KNearest> &knn);
+void ls(const char* lpPath, std::vector<std::string> &fileList);
 
 char rec(Mat character) {
 	Mat res;
@@ -22,29 +23,34 @@ char rec(Mat character) {
 	return NULL;
 }
 
-void train(std::string save) {
+void train(std::string save = defaultCSV) {
 	//trainData 个数*大小
 	//Labels 个数*10
 	Mat trainData,Label;
 	//录入训练样本和标记
-	int n,num;														//num 是样本是什么数字
-	std::vector<char[MAX_PATH]> fileList;
-	std::string path = "";
+	int num;														//num 是样本是什么数字
+	std::vector<std::string> fileList;
+	std::string path = "C:\\Users\\Administrator\\Desktop\\";
 	for (num = 0; num < 9; num++) {
 		char c = num + '0';
 		ls((path + c).c_str(), fileList);
-		for (int i = 0; i < n; i++) {
+		for (int i = 0; i < fileList.size(); i++) {
 			Mat tmp = imread(std::string(fileList[i]));
-			trainData.push_back(tmp.reshape(0, 1));
+			//std::cout << tmp.type() << std::endl;
+			trainData.push_back(tmp.reshape(1, 1));
 			Label.push_back(num);										//与trainData对应的标记
 		}
 		fileList.clear();
 	}
-	trainData.convertTo(trainData,CV_32F);
+		
+		trainData.convertTo(trainData, CV_32FC1, 1.0 / 255.0);
+	
 	Ptr<TrainData> tData = TrainData::create(trainData, ROW_SAMPLE, Label);
 	std::ofstream file(save);
 	file << format(tData->getTrainSamples(), Formatter::FMT_CSV);
 	file.close();
+	
+	
 	
 }
 
@@ -57,13 +63,13 @@ Ptr<KNearest> &load(std::string csv, Ptr<KNearest> &knn) {
 	return knn;
 }
 
-void ls(const char* lpPath, std::vector<char[MAX_PATH]> &fileList)
+void ls(const char* lpPath, std::vector<std::string> &fileList)
 {
 	char szFind[MAX_PATH];
 	WIN32_FIND_DATA FindFileData;
 
-	strcpy(szFind, lpPath);
-	strcat(szFind, "\\*.*");
+	strcpy_s(szFind, lpPath);
+	strcat_s(szFind, "\\*.*");
 
 	HANDLE hFind = ::FindFirstFile(szFind, &FindFileData);
 	if (INVALID_HANDLE_VALUE == hFind)    return;
@@ -75,16 +81,20 @@ void ls(const char* lpPath, std::vector<char[MAX_PATH]> &fileList)
 			if (FindFileData.cFileName[0] != '.')
 			{
 				char szFile[MAX_PATH];
-				strcpy(szFile, lpPath);
-				strcat(szFile, "\\");
-				strcat(szFile, (char*)(FindFileData.cFileName));
+				strcpy_s(szFile, lpPath);
+				strcat_s(szFile, "\\");
+				strcat_s(szFile, (char*)(FindFileData.cFileName));
 				ls(szFile, fileList);
 			}
 		}
 		else
 		{
 			//std::cout << FindFileData.cFileName << std::endl;  
-			fileList.push_back(FindFileData.cFileName);
+			char szFile[MAX_PATH];
+			strcpy_s(szFile,lpPath);
+			strcat_s(szFile, "\\");
+			strcat_s(szFile, FindFileData.cFileName);
+			fileList.push_back(std::string(szFile));
 		}
 		if (!FindNextFile(hFind, &FindFileData))    break;
 	}
