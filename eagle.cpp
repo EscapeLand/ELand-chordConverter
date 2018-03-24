@@ -15,23 +15,24 @@ using namespace cv::ml;
 cv::Ptr<cv::ml::KNearest> &load(std::string csv, Ptr<KNearest> &knn);
 void ls(const char* lpPath, std::vector<std::string> &fileList);
 
-char rec(Mat character) {
-	Mat res;
+int rec(Mat character) {
+	Mat res,tmp;
+	character.reshape(1, 1).convertTo(tmp,CV_32FC1,1.0/255.0);
 	Ptr<KNearest> knn = KNearest::create();
 	knn = load(defaultCSV, knn);
-	knn->findNearest(character, 5, res);
-	return NULL;
+	knn->findNearest(tmp, 5, res);
+	return res.at<float>(0, 0);
 }
 
 void train(std::string save = defaultCSV) {
 	//trainData 个数*大小
 	//Labels 个数*10
-	Mat trainData,Label;
+	Mat trainData, Label ,CSV;
 	//录入训练样本和标记
 	int num;														//num 是样本是什么数字
 	std::vector<std::string> fileList;
 	std::string path = "C:\\Users\\Administrator\\Desktop\\";
-	for (num = 0; num < 9; num++) {
+	for (num = 0; num < 5; num++) {
 		char c = num + '0';
 		ls((path + c).c_str(), fileList);
 		for (int i = 0; i < fileList.size(); i++) {
@@ -42,12 +43,12 @@ void train(std::string save = defaultCSV) {
 		}
 		fileList.clear();
 	}
-		
-		trainData.convertTo(trainData, CV_32FC1, 1.0 / 255.0);
-	
-	Ptr<TrainData> tData = TrainData::create(trainData, ROW_SAMPLE, Label);
+	Label.convertTo(Label,CV_32F);
+	trainData.convertTo(trainData, CV_32FC1, 1.0 / 255.0);
+	hconcat(Label, trainData, CSV);
+	//Ptr<TrainData> tData = TrainData::create(trainData, ROW_SAMPLE, Label);
 	std::ofstream file(save);
-	file << format(tData->getTrainSamples(), Formatter::FMT_CSV);
+	file << format(CSV, Formatter::FMT_CSV);
 	file.close();
 	
 	
@@ -56,10 +57,12 @@ void train(std::string save = defaultCSV) {
 
 Ptr<KNearest> &load(std::string csv, Ptr<KNearest> &knn) {
 	int K = 5;
-	Ptr<TrainData> tData = TrainData::loadFromCSV(csv, 0);
+	Ptr<TrainData> trainData = TrainData::loadFromCSV(csv, 0, 0, -1);
 	knn->setDefaultK(K);
 	knn->setIsClassifier(true);
-	knn->train(tData);
+	Mat Label;
+	trainData->getResponses().convertTo(Label,CV_32S);
+	knn->train(trainData->getSamples(),ROW_SAMPLE,Label);
 	return knn;
 }
 
@@ -69,7 +72,7 @@ void ls(const char* lpPath, std::vector<std::string> &fileList)
 	WIN32_FIND_DATA FindFileData;
 
 	strcpy_s(szFind, lpPath);
-	strcat_s(szFind, "\\*.*");
+	strcat_s(szFind, "\\*.jpg");
 
 	HANDLE hFind = ::FindFirstFile(szFind, &FindFileData);
 	if (INVALID_HANDLE_VALUE == hFind)    return;
