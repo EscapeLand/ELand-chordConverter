@@ -21,7 +21,7 @@ int rec(Mat character) {
 	Ptr<KNearest> knn = KNearest::create();
 	knn = load(defaultCSV, knn);
 	knn->findNearest(tmp, 5, res);
-	return res.at<float>(0, 0);
+	return (int)res.at<float>(0, 0);
 }
 
 void train(std::string save = defaultCSV) {
@@ -32,10 +32,10 @@ void train(std::string save = defaultCSV) {
 	int num;														//num 是样本是什么数字
 	std::vector<std::string> fileList;
 	std::string path = "C:\\Users\\Administrator\\Desktop\\";
-	for (num = 0; num < 5; num++) {
+	for (num = 0; num < 9; num++) {
 		char c = num + '0';
 		ls((path + c).c_str(), fileList);
-		for (int i = 0; i < fileList.size(); i++) {
+		for (int i = 0; i < (int)fileList.size(); i++) {
 			Mat tmp = imread(std::string(fileList[i]));
 			//std::cout << tmp.type() << std::endl;
 			trainData.push_back(tmp.reshape(1, 1));
