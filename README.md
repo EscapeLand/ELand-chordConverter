@@ -1,15 +1,15 @@
 # ELand-chordConverter
-½«Ò»ÕÅÍ¼Æ¬ÐÎÊ½µÄ¼ªËûÆ××ª»»³ÉXML¸ñÊ½µÄMIDIÎÄ¼þ£¬±ãÓÚÓÃGuitar ProÖ®ÀàµÄ´òÆ×Èí¼þ¶ÁÈ¡ÐÞ¸Ä¡£
-Êµ¼ÊÉÏ¸ü³£ÓÃµÄÓ¦¸ÃÊÇ£¬ÄÃÀ´Ò»ÕÅÁùÏßÆ×£¬É¨³öÀ´¸øGuitar ProÌý¸öÏì :D
+å°†ä¸€å¼ å›¾ç‰‡å½¢å¼çš„å‰ä»–è°±è½¬æ¢æˆXMLæ ¼å¼çš„MIDIæ–‡ä»¶ï¼Œä¾¿äºŽç”¨Guitar Proä¹‹ç±»çš„æ‰“è°±è½¯ä»¶è¯»å–ä¿®æ”¹ã€‚
+å®žé™…ä¸Šæ›´å¸¸ç”¨çš„åº”è¯¥æ˜¯ï¼Œæ‹¿æ¥ä¸€å¼ å…­çº¿è°±ï¼Œæ‰«å‡ºæ¥ç»™Guitar Proå¬ä¸ªå“ :D
 
-ÎÄ¼þ£º
-	Dodo.cpp ÊÕ¼¯ÁËÍ¼Ïñ´¦Àíº¯Êý
-	frmain.cpp ¹ýÊ±ÎÄ¼þ£¬Ô­±¾ÓÃ×÷GUI£¬ÏÖÔÚGUIÒÑÍ£Ö¹¿ª·¢. ÁùÔÂ·ÝµÄÊ±ºò¿ÉÄÜÖØÐ´GUI
-	myheader.h Í·ÎÄ¼þ¼°º¯ÊýÉùÃ÷
-	eagle.cpp »úÆ÷Ñ§Ï°²¿·Ö
-	maincpp.cpp ×÷ÎªÒ»¸öÃüÁîÐÐ³ÌÐòµÄÖ÷³ÌÐò²¿·Ö
-	GUI.h ¹ýÊ±ÎÄ¼þ£¬×ÔÐ´×ÔÓÃµÄGUI¿â. ÁùÔÂ·Ý×óÓÒ»á¸üÐÂ
-	tData.csv »úÆ÷Ñ§Ï°±£´æµÄÊý¾Ý£¬×ö±¸·ÝÖ®ÓÃ
+æ–‡ä»¶ï¼š
+	Dodo.cpp æ”¶é›†äº†å›¾åƒå¤„ç†å‡½æ•° 
+	frmain.cpp è¿‡æ—¶æ–‡ä»¶ï¼ŒåŽŸæœ¬ç”¨ä½œGUIï¼ŒçŽ°åœ¨GUIå·²åœæ­¢å¼€å‘. å…­æœˆä»½çš„æ—¶å€™å¯èƒ½é‡å†™GUI
+	myheader.h å¤´æ–‡ä»¶åŠå‡½æ•°å£°æ˜Ž
+	eagle.cpp æœºå™¨å­¦ä¹ éƒ¨åˆ†
+	maincpp.cpp ä½œä¸ºä¸€ä¸ªå‘½ä»¤è¡Œç¨‹åºçš„ä¸»ç¨‹åºéƒ¨åˆ†
+	GUI.h è¿‡æ—¶æ–‡ä»¶ï¼Œè‡ªå†™è‡ªç”¨çš„GUIåº“. å…­æœˆä»½å·¦å³ä¼šæ›´æ–°
+	tData.csv æœºå™¨å­¦ä¹ ä¿å­˜çš„æ•°æ®ï¼Œåšå¤‡ä»½ä¹‹ç”¨
 
 
-±¾ÏîÄ¿½«ÓÚ2018ÄêÆßÔÂÍ£Ö¹¿ª·¢£¬Ö®ºóÊÓÇé¿ö¿ÉÄÜÓÉ¹ÜÀíÔ±½Ó¹Ü.
+æœ¬é¡¹ç›®å°†äºŽ2018å¹´ä¸ƒæœˆåœæ­¢å¼€å‘ï¼Œä¹‹åŽè§†æƒ…å†µå¯èƒ½ç”±ç®¡ç†å‘˜æŽ¥ç®¡.
