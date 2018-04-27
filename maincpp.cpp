@@ -1,74 +1,51 @@
 #include"myheader.h"
 
+#define mode  0 //0-main program  1-train  2-test
+
 int main() {
-	std::cout << "Drag image here to start: "<< std::endl ;
+#if mode == 1
+	train();
+	return 0;
+#endif
 	std::string f;
+	size_t n;
+	bool cat, flag = false, dog = false;
+	std::vector<space> coll;
+	std::vector<space> toCut;
+
+	std::cout << "Drag image here to start: "<< std::endl ;
 	std::cin >> f;
+#if mode == 2
+	std::cout << rec(cv::imread(f)) << std::endl;
+	system("pause");
+	return 0;
+#endif
 	cv::Mat img = threshold(f);
 	if (img.empty()) {
 		std::cout << "Wrong format." << std::endl;
 		system("pause");
 		return 1;
 	}
-	std::vector<space> coll;
 	cv::Mat trimmed = trim(img);
-	bool flag = false;
-	for (int st = trimmed.rows,i = 0; i < trimmed.rows; i++) {
-		//初步设为0.04 以后再说
-		if (isEmptyLine(trimmed, i, 0.001)) {
-			if (!flag) {
-				st = i;
-				flag = true;
-			}
-		}
-		else {
-			if (flag) {
-				if(i - 1 - st > 0) coll.push_back({ st,i - 1 - st });
-				flag = false;
-			}
+	if (!split(trimmed, coll,cat)) {
+		return 1;
+	}
+	n = coll.size();
+	bool *r = new bool[n];
+	for (size_t i = 0; i < n; i++) r[i] = false;
+	for (;;) {
+		int a = interCheck(&coll,true);
+		if (a == -1) break;
+		else r[a] = true;
+	};
+	bool* mm = KClassify(coll);
+	for (size_t k = 0,i = 0; i < n; i++) {
+		if (!r[i]) {
+			r[i] = mm[k++];
 		}
 	}
-	bool cat = true;
-	if (coll.size() < 2) {
-		cat = false;
-		std::cout << "裁剪失败，等待二次裁剪" << std::endl;
-		//二次裁剪为缩减判断空行的范围，从之前的从像素x=0 至x=col到检测到的横线的x1至x2
-		std::vector<cv::Vec4i> rows;
-		findRow(trimmed,CV_PI/18,rows);
-		if (rows.size() > 5) {
-			std::cout << "二次裁剪开始." << std::endl;
-			flag = false;
-			for (int st = trimmed.rows, i = 0; i < trimmed.rows; i++) {
-				if (isEmptyLine(trimmed, i,std::max(std::min(rows[0][0],rows[0][2]),std::min(rows[5][0],rows[5][2])),
-					std::min(std::max(rows[0][0], rows[0][2]), std::max(rows[5][0], rows[5][2])), 0.01)) {
-					if (!flag) {
-						st = i;
-						flag = true;
-					}
-				}
-				else {
-					if (flag) {
-						if(i-1-st > 0) coll.push_back({ st,i - 1 - st });
-						flag = false;
-					}
-				}
-			}
-			
-		}
-		if (coll.size()<2) {
-			std::cout << "二次裁剪失败，请手动处理" << std::endl;
-			imshow("WTF", trimmed);
-			cvWaitKey();
-			return 1;
-		}
-	}
-	size_t n;
-	do {
-		n = coll.size();
-		interCheck(&coll);
-	} while (n > coll.size());
-	bool* r = KClassify(coll);
-	std::vector<space> toCut;
+	delete[] mm;
+	n = coll.size();
 	
 	for (int i = 0; i < n; i++) {
 		if (r[i]) {
@@ -77,15 +54,13 @@ int main() {
 			cvtColor(trimmed, ccolor, CV_GRAY2BGR);
 			line(ccolor, CvPoint(0, coll[i].start), CvPoint(trimmed.cols, coll[i].start), CvScalar(0, 0, 255));
 			line(ccolor, CvPoint(0, coll[i].start + coll[i].length), CvPoint(trimmed.cols, coll[i].start + coll[i].length), CvScalar(0, 0, 255));
-			imshow("2", ccolor); cvWaitKey();
-			*/
-
+			imshow("2", ccolor); cvWaitKey();*/
+			
 			toCut.push_back(coll[i]);
 		}
 	}
 	
-	bool dog = false;
-	if (toCut.size()>2) {
+	if (toCut.size() > 2) {
 		std::cout << "过滤算法正常" << std::endl;
 		coll.clear();
 	}
@@ -95,14 +70,27 @@ int main() {
 	}
 	n = toCut.size();
 	delete[] r;
-	cv::Mat *piece = new cv::Mat[n+1];
-	piece[0] = trimmed(cv::Range(0, toCut[0].start), cv::Range(0, trimmed.cols));
+
+	std::vector<cv::Mat> piece;
+	std::vector<cv::Mat> chords;
+	std::vector<cv::Mat> section;
+	std::vector<cv::Mat> info;
+	std::vector<cv::Mat> notes;
+	std::vector<cv::Vec4i> pos;
+	std::vector<cv::Mat> nums;
+	cv::Mat toOCR;
+
+	for (int i = 0; i <= n; i++) {
+		cv::Mat tmp;
+		piece.push_back(tmp);
+	}
+	//cut<space>(trimmed, toCut, [](space x) ->int& {return x.start; }, 1, piece);
+	trimmed(cv::Range(0, toCut[0].start), cv::Range(0, trimmed.cols)).copyTo(piece[0]);
 	for (int i = 1; i < n; i++) {
-		//bug
 		trimmed(cv::Range(toCut[i - 1].start + toCut[i - 1].length + 1, toCut[i].start),
 			cv::Range(0, trimmed.cols)).copyTo(piece[i]);
 	}
-	piece[n] = trimmed(cv::Range(toCut[n - 1].start + toCut[n - 1].length + 1, trimmed.rows), cv::Range(0, trimmed.cols));
+	trimmed(cv::Range(toCut[n - 1].start + toCut[n - 1].length + 1, trimmed.rows), cv::Range(0, trimmed.cols)).copyTo(piece[n]);
 	
 	if (dog && cat) {
 		std::cout << "运行修补算法" << std::endl;
@@ -129,19 +117,16 @@ int main() {
 		}
 		delete[] b;
 	}
-	std::vector<cv::Mat> chords;
-	std::vector<cv::Mat> section;
-	std::vector<cv::Mat> info;
-	std::vector<cv::Mat> notes;
-	cv::Mat toOCR;
+	
+	
 
-	flag = false;
 	for (int i = 0; i <= n; i++) {
 		if (piece[i].empty()) continue;
 		std::vector<cv::Vec4i> rows;
-		findRow(piece[i], CV_PI / 18, rows);
+		int thick = 0;
+		findRow(piece[i], CV_PI / 18, rows,thick);
 		
-		if (rows.size() > 5) {													
+		if (rows.size() > 5) {
 			flag = true;
 			chords.push_back(piece[i]);
 			//为OCR去掉横线
@@ -150,55 +135,43 @@ int main() {
 			cv::Mat hline = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(piece[i].cols / 30, 1));			//水平结构
 			erode(255 - piece[i], eroded, hline);																//腐蚀
 			dilate(eroded, dilated, hline);																		//膨胀
-			toOCR = cv::max(dilated,piece[i]);
+			toOCR = cv::max(dilated, piece[i]);
 
 			std::vector<cv::Vec4i> lines;
-			int max = std::min(rows[5][1],rows[5][3]);
-			int min = std::max(rows[0][1],rows[0][3]);
-			findCol(toOCR, CV_PI / 18 * 8, max , min , lines);
-			for (int j = 0; j < (int)lines.size() - 1; j++) {
-				section.push_back(toOCR(cv::Range(0, piece[i].rows), cv::Range(lines[j][0] + 1, lines[j + 1][0])).clone());
+			int max = std::min(rows[5][1], rows[5][3]);
+			int min = std::max(rows[0][1], rows[0][3]);
 
-				std::vector<std::vector<cv::Point>> cont;
-				cv::Mat ccolor;
-				cv::Mat inv = 255 - section.back();
-				cvtColor(section.back(), ccolor, CV_GRAY2BGR);
-				cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-				for (int j = 0; j < cont.size(); j++) {
-					int r = 0, l = 999999, d = 0, u = 999999;
-					for (int k = 0; k < cont[j].size(); k++) {
-						l = std::min(l, cont[j][k].x);
-						r = std::max(r, cont[j][k].x);
-						u = std::min(u, cont[j][k].y);
-						d = std::max(d, cont[j][k].y);
-					}
-					if(d - u < rows[1][1] - rows[0][1]
-						&& d - u > r - l)
-						savePic("C:\\Users\\Administrator\\Desktop\\oh\\", section.back()(cv::Range(u, d+1), cv::Range(l, r+1)));
-				}
-			}
+			findCol(piece[i], CV_PI / 18 * 8, max, min, thick, lines);
+			int range = 0;
+			if(lines.size()) range = cut(toOCR, lines, 0, section, true);
+			extractNum(pos, nums, section, rows, range);
 		}
 		else {
 			if(flag) notes.push_back(piece[i]);
 			else info.push_back(piece[i]);
 		}
 	}
-	delete[] piece;
+	piece.clear();
 	/*for (cv::Mat& i : info) {
 		imshow("info",i);
 		cvWaitKey();
 	}
-	cvDestroyWindow("info");
-	for (cv::Mat& i : section) {
-		imshow("section",i);
-		cvWaitKey();
+	cvDestroyWindow("info");*/
+	/*for (cv::Mat& i : section) {
+		if(!i.empty()) imshow("section",i);
+		else std::cerr << "empty image in section" << std::endl;
+		cvWaitKey(0);
 	}
-	cvDestroyWindow("section");
-	for (cv::Mat& i : notes) {
+	cvDestroyWindow("section");*/
+	/*for (cv::Mat& i : notes) {
 		imshow("notes",i);
 		cvWaitKey();
-	}
-	cvWaitKey();
+	}*/
+	/*cvWaitKey(0);
 	cvDestroyAllWindows();*/
+
+	
+	/*saveNums("C:\\Users\\Administrator\\Desktop\\oh\\", nums);
+	system("pause");*/
 }
 
