@@ -47,7 +47,8 @@ int cut(Mat img, std::vector<Vec4i> divideBy, int direction, std::vector<Mat> &c
 	return (int)container.size() - from;
 }
 
-bool split(Mat img, std::vector<space> &coll,bool &cat) {
+int split(Mat img, std::vector<space> &coll,bool twiceCut) {
+	int r = 1;
 	bool flag = false;
 	for (int st = img.rows, i = 0; i < img.rows; i++) {
 		//初步设为0.04 以后再说
@@ -66,9 +67,9 @@ bool split(Mat img, std::vector<space> &coll,bool &cat) {
 			}
 		}
 	}
-	if (coll.size() < 2) {
+	if (coll.size() < 2 &&  twiceCut) {
 		coll.clear();
-		cat = false;
+		r = 2;
 		std::cout << "裁剪失败，等待二次裁剪" << std::endl;
 		//二次裁剪为缩减判断空行的范围，从之前的从像素x=0 至x=col到检测到的横线的x1至x2
 		std::vector<cv::Vec4i> rows;
@@ -98,10 +99,10 @@ bool split(Mat img, std::vector<space> &coll,bool &cat) {
 			std::cout << "二次裁剪失败，请手动处理" << std::endl;
 			imshow("WTF", img);
 			cvWaitKey(0);
-			return false;
+			return 3;
 		}
 	}
-	return true;
+	return r;
 }
 
 inline void extractNum(std::vector<Vec4i> &pos, std::vector<Mat> &nums, std::vector<Mat> section, std::vector<Vec4i> rows,int range) {

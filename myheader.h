@@ -23,12 +23,11 @@ typedef struct _space {
 }space;
 
 extern bool* KClassify(std::vector<space> collection);
-extern void interCheck(std::vector<space> *collection);
-extern int interCheck(std::vector<space> *collection, bool reserved);
+extern int interCheck(std::vector<space> &collection);
 //eagle.cpp
 extern int rec(cv::Mat character);
 extern void train(std::string save = "tData.csv");
 //framework.cpp
 extern int cut(cv::Mat img, std::vector<cv::Vec4i> divideBy, int direction, std::vector<cv::Mat> &container, bool includeAll = true);
-extern bool split(cv::Mat img, std::vector<space> &coll,bool& cat);
+extern int split(cv::Mat img, std::vector<space> &coll,bool twiceCut = true);
 extern void extractNum(std::vector<cv::Vec4i> &pos, std::vector<cv::Mat> &nums, std::vector<cv::Mat> section, std::vector<cv::Vec4i> rows,int range);

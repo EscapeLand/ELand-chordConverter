@@ -9,7 +9,8 @@ int main() {
 #endif
 	std::string f;
 	size_t n;
-	bool cat, flag = false, dog = false;
+	int cutTimes;
+	bool flag = false, dog = false;
 	std::vector<space> coll;
 	std::vector<space> toCut;
 
@@ -27,14 +28,15 @@ int main() {
 		return 1;
 	}
 	cv::Mat trimmed = trim(img);
-	if (!split(trimmed, coll,cat)) {
+	cutTimes = split(trimmed, coll);
+	if (cutTimes == 3) {
 		return 1;
 	}
 	n = coll.size();
 	bool *r = new bool[n];
 	for (size_t i = 0; i < n; i++) r[i] = false;
 	for (;;) {
-		int a = interCheck(&coll,true);
+		int a = interCheck(coll);
 		if (a == -1) break;
 		else r[a] = true;
 	};
@@ -92,13 +94,13 @@ int main() {
 	}
 	trimmed(cv::Range(toCut[n - 1].start + toCut[n - 1].length + 1, trimmed.rows), cv::Range(0, trimmed.cols)).copyTo(piece[n]);
 	
-	if (dog && cat) {
+	if (dog && cutTimes == 2) {
 		std::cout << "ÔËÐÐÐÞ²¹Ëã·¨" << std::endl;
 		std::vector<space> toJoin;
 		for (int i = 1; i <= n; i++) toJoin.push_back({0,piece[i].rows});
 		bool* b = new bool[toCut.size()+1]();
 		do{
-			int a = interCheck(&toJoin, true);
+			int a = interCheck(toJoin);
 			if(SUCCEED(a)) b[a] = true;
 			else break;
 		}while(1);
@@ -173,5 +175,9 @@ int main() {
 	
 	/*saveNums("C:\\Users\\Administrator\\Desktop\\oh\\", nums);
 	system("pause");*/
+	for (cv::Mat& i : section) {
+		std::vector<space> spaces;
+		split(i, spaces, false);
+	}
 }
 
