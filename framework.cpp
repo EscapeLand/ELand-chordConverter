@@ -67,6 +67,7 @@ bool split(Mat img, std::vector<space> &coll,bool &cat) {
 		}
 	}
 	if (coll.size() < 2) {
+		coll.clear();
 		cat = false;
 		std::cout << "裁剪失败，等待二次裁剪" << std::endl;
 		//二次裁剪为缩减判断空行的范围，从之前的从像素x=0 至x=col到检测到的横线的x1至x2
