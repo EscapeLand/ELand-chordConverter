@@ -47,7 +47,7 @@ int cut(Mat img, std::vector<Vec4i> divideBy, int direction, std::vector<Mat> &c
 	return (int)container.size() - from;
 }
 
-int split(Mat img, std::vector<space> &coll,bool twiceCut) {
+int split(Mat img, std::vector<space> &coll) {
 	int r = 1;
 	bool flag = false;
 	for (int st = img.rows, i = 0; i < img.rows; i++) {
@@ -67,7 +67,7 @@ int split(Mat img, std::vector<space> &coll,bool twiceCut) {
 			}
 		}
 	}
-	if (coll.size() < 2 &&  twiceCut) {
+	if (coll.size() < 2) {
 		coll.clear();
 		r = 2;
 		std::cout << "裁剪失败，等待二次裁剪" << std::endl;
@@ -102,16 +102,31 @@ int split(Mat img, std::vector<space> &coll,bool twiceCut) {
 			return 3;
 		}
 	}
+	/*cv::Mat ccolor;
+	for (int i = 0; i < coll.size(); i++) {
+		cvtColor(img, ccolor, CV_GRAY2BGR);
+		line(ccolor, CvPoint(0, coll[i].start), CvPoint(img.cols, coll[i].start), CvScalar(0, 0, 255));
+		line(ccolor, CvPoint(0, coll[i].start + coll[i].length), CvPoint(img.cols, coll[i].start + coll[i].length), CvScalar(255, 0, 0));
+	}
+	imshow("2", ccolor); cvWaitKey();*/
 	return r;
 }
 
-inline void extractNum(std::vector<Vec4i> &pos, std::vector<Mat> &nums, std::vector<Mat> section, std::vector<Vec4i> rows,int range) {
+inline void extractNum(std::vector<Vec4i> &pos, std::vector<Mat> &nums, std::vector<Mat> section, std::vector<Vec4i> rows,int &bottom,int range) {
+	/*
+	 * 函数：extractNum
+	 * 功能：从传入图像中提取数字等
+	 * 参数：	pos，Vec4i，分别是位置信息的左 上 右 下
+				nums，Mat，提取到的图像
+				section，Mat，传入图像
+				rows，Vec4i，传入的网格信息（谱线）
+				bottom，int，提取数字的下界，可用于时值扫描函数
+				range，int，从section尾部开始，要处理的范围
+	*/
+	bottom = 0;
 	for (size_t j = section.size() - range; j < section.size(); j++) {
 		std::vector<std::vector<cv::Point>> cont;
 		cv::Mat inv = 255 - section[j];
-		//cv::Mat ccolor;
-		//cvtColor(section.back(), ccolor, CV_GRAY2BGR);
-
 		cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 		for (int q = 0; q < cont.size(); q++) {
 			cv::Vec4i tmp = { section.back().cols,section.back().rows,0,0 };
@@ -124,9 +139,43 @@ inline void extractNum(std::vector<Vec4i> &pos, std::vector<Mat> &nums, std::vec
 				pos.push_back(tmp);
 			}
 			//限定筛选
-			if (tmp[3] - tmp[1] < rows[1][1] - rows[0][1]
-				&& tmp[3] - tmp[1] > tmp[2] - tmp[0])
+			if (tmp[3] - tmp[1] < rows[1][1] - rows[0][1]					//网格限定
+				&& tmp[3] - tmp[1] > tmp[2] - tmp[0])						//形状限定
+			{
+				bottom = std::max(bottom, tmp[3]);
 				nums.push_back(section[j](cv::Range(tmp[1], tmp[3] + 1), cv::Range(tmp[0], tmp[2] + 1)));
+			}
 		}
 	}
+}
+
+void duration(Mat img, std::vector<space> &coll) {
+	bool flag = false;
+	for (int st = img.rows, i = 0; i < img.rows; i++) {
+		//初步设为0.04 以后再说
+		if (isEmptyLine(img, i, 0.001)) {
+			if (!flag) {
+				st = i;
+				flag = true;
+			} 
+		}
+		else {
+			if (flag) {
+				if (i - 1 - st > 0) {
+					if (i - 1 - st > img.rows * 2 / 3) return;
+					coll.push_back({ st,i - 1 - st });
+				}
+				flag = false;
+			}
+		}
+	}
+	
+	cv::Mat ccolor;
+	cvtColor(img, ccolor, CV_GRAY2BGR);
+	for (int i = 0; i < coll.size(); i++) {
+		line(ccolor, CvPoint(0, coll[i].start), CvPoint(img.cols, coll[i].start), CvScalar(0, 0, 255));
+		line(ccolor, CvPoint(0, coll[i].start + coll[i].length), CvPoint(img.cols, coll[i].start + coll[i].length), CvScalar(255, 0, 0));
+	}
+	imshow("timeValue", ccolor); cvWaitKey();
+	return;
 }

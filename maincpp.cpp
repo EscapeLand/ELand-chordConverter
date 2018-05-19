@@ -1,6 +1,6 @@
 #include"myheader.h"
 
-#define mode  0 //0-main program  1-train  2-test
+#define mode 2  //0-main program  1-train  2-test
 
 int main() {
 #if mode == 1
@@ -28,6 +28,7 @@ int main() {
 		return 1;
 	}
 	cv::Mat trimmed = trim(img);
+	//imshow("2", trimmed); cvWaitKey();
 	cutTimes = split(trimmed, coll);
 	if (cutTimes == 3) {
 		return 1;
@@ -76,6 +77,7 @@ int main() {
 	std::vector<cv::Mat> piece;
 	std::vector<cv::Mat> chords;
 	std::vector<cv::Mat> section;
+	std::vector<cv::Mat> timeValue;
 	std::vector<cv::Mat> info;
 	std::vector<cv::Mat> notes;
 	std::vector<cv::Vec4i> pos;
@@ -145,8 +147,16 @@ int main() {
 
 			findCol(piece[i], CV_PI / 18 * 8, max, min, thick, lines);
 			int range = 0;
+			int bottom;
 			if(lines.size()) range = cut(toOCR, lines, 0, section, true);
-			extractNum(pos, nums, section, rows, range);
+			extractNum(pos, nums, section, rows, bottom, range);
+			std::vector<cv::Mat> tmpNotes;
+			cut(piece[i], lines, 0,tmpNotes , true);
+			for (size_t i = 0; i < tmpNotes.size(); i++) {
+				cv::Mat tmp;
+				tmpNotes[i](cv::Range(bottom, tmpNotes[i].rows), cv::Range::all()).copyTo(tmp);
+				timeValue.push_back(tmp);
+			}
 		}
 		else {
 			if(flag) notes.push_back(piece[i]);
@@ -154,6 +164,10 @@ int main() {
 		}
 	}
 	piece.clear();
+
+	for (int i = 0; i < pos.size(); i++) {
+
+	}
 	/*for (cv::Mat& i : info) {
 		imshow("info",i);
 		cvWaitKey();
@@ -175,9 +189,10 @@ int main() {
 	
 	/*saveNums("C:\\Users\\Administrator\\Desktop\\oh\\", nums);
 	system("pause");*/
-	for (cv::Mat& i : section) {
+
+	/*for (cv::Mat& i : timeValue) {
 		std::vector<space> spaces;
-		split(i, spaces, false);
-	}
+		duration(i, spaces);
+	}*/
 }
 

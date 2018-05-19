@@ -15,12 +15,18 @@ using namespace cv::ml;
 cv::Ptr<cv::ml::KNearest> &load(std::string csv, Ptr<KNearest> &knn);
 void ls(const char* lpPath, std::vector<std::string> &fileList);
 
-int rec(Mat character) {
-	Mat res,tmp;
-	character.reshape(1, 1).convertTo(tmp,CV_32FC1,1.0/255.0);
-	Ptr<KNearest> knn = KNearest::create();
+int rec(Mat character,std::vector<int> &possible) {
+	Mat res,tmp,neighbour;
+	character.reshape(1, 1).convertTo(tmp, CV_32FC1, 1.0 / 255.0);
+	static Ptr<KNearest> knn = KNearest::create();
 	knn = load(defaultCSV, knn);
-	knn->findNearest(tmp, 5, res);
+	knn->findNearest(tmp, 5, res, neighbour);
+	possible.clear();
+	for (int j = 0; j < neighbour.rows; j++) {
+		possible.push_back((int)neighbour.at<float>(j, 0));
+	}
+	sort(possible.begin(), possible.end());
+	possible.erase(unique(possible.begin(),possible.end()),possible.end());		//去重
 	return (int)res.at<float>(0, 0);
 }
 
@@ -29,7 +35,7 @@ void train(std::string save = defaultCSV) {
 	//Labels 个数*10
 	Mat trainData, Label ,CSV;
 	//录入训练样本和标记
-	int num;														//num 是样本是什么数字
+	int num;															//num 是样本是什么数字
 	std::vector<std::string> fileList;
 	std::string path = "C:\\Users\\Administrator\\Desktop\\";
 	for (num = 0; num < 9; num++) {
@@ -56,6 +62,9 @@ void train(std::string save = defaultCSV) {
 }
 
 Ptr<KNearest> &load(std::string csv, Ptr<KNearest> &knn) {
+	if (knn->isTrained()) {
+		return knn;											//避免重复
+	}
 	int K = 5;
 	Ptr<TrainData> trainData = TrainData::loadFromCSV(csv, 0, 0, -1);
 	knn->setDefaultK(K);
