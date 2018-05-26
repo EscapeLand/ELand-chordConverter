@@ -78,7 +78,7 @@ int split(Mat img, std::vector<space> &coll) {
 		if (rows.size() > 5) {
 			std::cout << "二次裁剪开始." << std::endl;
 			flag = false;
-			for (int st = img.rows, i = 0; i < img.rows; i++) {
+			for (int st = img.rows, i = min(rows[0][1], rows[0][3]); i < img.rows; i++) {
 				if (isEmptyLine(img, i, std::max(std::min(rows[0][0], rows[0][2]), std::min(rows[5][0], rows[5][2])),
 					std::min(std::max(rows[0][0], rows[0][2]), std::max(rows[5][0], rows[5][2])), 0.01)) {
 					if (!flag) {
@@ -101,15 +101,16 @@ int split(Mat img, std::vector<space> &coll) {
 			cvWaitKey(0);
 			return 3;
 		}
+		/*cv::Mat ccolor;
+		for (int i = 0; i < coll.size(); i++) {
+			cvtColor(img, ccolor, CV_GRAY2BGR);
+			line(ccolor, CvPoint(0, coll[i].start), CvPoint(img.cols, coll[i].start), CvScalar(0, 0, 255));
+			line(ccolor, CvPoint(0, coll[i].start + coll[i].length), CvPoint(img.cols, coll[i].start + coll[i].length), CvScalar(255, 0, 0));
+		}
+		imshow("2", ccolor); cvWaitKey();*/
 	}
-	/*cv::Mat ccolor;
-	for (int i = 0; i < coll.size(); i++) {
-		cvtColor(img, ccolor, CV_GRAY2BGR);
-		line(ccolor, CvPoint(0, coll[i].start), CvPoint(img.cols, coll[i].start), CvScalar(0, 0, 255));
-		line(ccolor, CvPoint(0, coll[i].start + coll[i].length), CvPoint(img.cols, coll[i].start + coll[i].length), CvScalar(255, 0, 0));
-	}
-	imshow("2", ccolor); cvWaitKey();*/
-	return r;
+		return r;
+	
 }
 
 inline void extractNum(std::vector<Vec4i> &pos, std::vector<Mat> &nums, std::vector<Mat> section, std::vector<Vec4i> rows,int &bottom,int range) {
@@ -178,4 +179,21 @@ void duration(Mat img, std::vector<space> &coll) {
 	}
 	imshow("timeValue", ccolor); cvWaitKey();
 	return;
+}
+
+Mat Morphology(Mat img, int len, bool horizontal ,bool open) {
+	Mat dilated, eroded;
+	Mat kernel = horizontal ?
+		getStructuringElement(MORPH_RECT, Size(max(len, 1),1)):					//水平结构
+		getStructuringElement(MORPH_RECT, Size(1,max(len,1)));						//竖直结构
+	if (open) {
+		dilate(img, dilated, kernel);																		//膨胀
+		erode(dilated, eroded, kernel);																		//腐蚀
+		return eroded;
+	}
+	else {
+		erode(img, eroded, kernel);																			//腐蚀
+		dilate(eroded, dilated, kernel);																	//膨胀
+		return dilated;
+	}
 }

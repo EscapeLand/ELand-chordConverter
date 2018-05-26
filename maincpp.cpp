@@ -1,7 +1,7 @@
-#include"myheader.h"
+#include"Cuckoo.h"
+#define mode 0  //0-main program  1-train  2-test
 
-#define mode 2  //0-main program  1-train  2-test
-
+int col;
 int main() {
 #if mode == 1
 	train();
@@ -17,7 +17,8 @@ int main() {
 	std::cout << "Drag image here to start: "<< std::endl ;
 	std::cin >> f;
 #if mode == 2
-	std::cout << rec(cv::imread(f)) << std::endl;
+	std::vector<int> poss;
+	std::cout << rec(cv::imread(f),poss) << std::endl;
 	system("pause");
 	return 0;
 #endif
@@ -28,7 +29,31 @@ int main() {
 		return 1;
 	}
 	cv::Mat trimmed = trim(img);
-	//imshow("2", trimmed); cvWaitKey();
+	col = trimmed.cols;
+	//trimmed = Morphology(trimmed, trimmed.cols / 400, true, false);
+	//std::vector<std::vector<cv::Point>> cont;
+	//cv::Mat inv = 255 - trimmed;
+	//cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+	//cv::Mat ccolor;
+	//cvtColor(trimmed, ccolor, CV_GRAY2BGR);
+	//for (int q = 0; q < cont.size(); q++) {
+	//	cv::Vec4i tmp = { trimmed.cols,trimmed.rows,0,0 };
+	//	for (int k = 0; k < cont[q].size(); k++) {
+	//		tmp[0] = std::min(tmp[0], cont[q][k].x);
+	//		tmp[2] = std::max(tmp[2], cont[q][k].x);
+	//		tmp[1] = std::min(tmp[1], cont[q][k].y);
+	//		tmp[3] = std::max(tmp[3], cont[q][k].y);
+
+	//	}
+	//	//限定筛选
+	//	if (tmp[2] - tmp[0] > trimmed.cols /2)						//形状限定
+	//	{
+	//		rectangle(ccolor,cv::Point(tmp[0],tmp[1]),cv::Point(tmp[2],tmp[3]),cv::Scalar(0,0,255));
+	//	}
+	//}
+	//ccolor = perspect(ccolor, 960 * ccolor.cols / ccolor.rows, 960);
+	//imshow("2", ccolor); cvWaitKey();
+	//return 0;
 	cutTimes = split(trimmed, coll);
 	if (cutTimes == 3) {
 		return 1;
@@ -76,7 +101,7 @@ int main() {
 
 	std::vector<cv::Mat> piece;
 	std::vector<cv::Mat> chords;
-	std::vector<cv::Mat> section;
+	std::vector<measure> sections;
 	std::vector<cv::Mat> timeValue;
 	std::vector<cv::Mat> info;
 	std::vector<cv::Mat> notes;
@@ -140,22 +165,21 @@ int main() {
 			erode(255 - piece[i], eroded, hline);																//腐蚀
 			dilate(eroded, dilated, hline);																		//膨胀
 			toOCR = cv::max(dilated, piece[i]);
-
+			
 			std::vector<cv::Vec4i> lines;
 			int max = std::min(rows[5][1], rows[5][3]);
 			int min = std::max(rows[0][1], rows[0][3]);
 
 			findCol(piece[i], CV_PI / 18 * 8, max, min, thick, lines);
-			int range = 0;
-			int bottom;
-			if(lines.size()) range = cut(toOCR, lines, 0, section, true);
-			extractNum(pos, nums, section, rows, bottom, range);
-			std::vector<cv::Mat> tmpNotes;
-			cut(piece[i], lines, 0,tmpNotes , true);
-			for (size_t i = 0; i < tmpNotes.size(); i++) {
-				cv::Mat tmp;
-				tmpNotes[i](cv::Range(bottom, tmpNotes[i].rows), cv::Range::all()).copyTo(tmp);
-				timeValue.push_back(tmp);
+			std::vector<cv::Mat> origin;
+			std::vector<cv::Mat> section;
+			if (lines.size()) {
+				cut(toOCR, lines, 0, section, true);
+				cut(piece[i], lines, 0, origin, true);
+			}
+			for (int j = 0; j < section.size(); j++) {
+				measure newSec(origin[j],section[j],rows);
+				sections.push_back(newSec);
 			}
 		}
 		else {
@@ -165,34 +189,17 @@ int main() {
 	}
 	piece.clear();
 
-	for (int i = 0; i < pos.size(); i++) {
+	//saveNums("C:\\Users\\Administrator\\Desktop\\oh", nums);
+	//system("pause");
 
+	system("pause");
+	system("cls");
+	for (measure &i : sections) {
+		for (note &j : i.notes) {
+			if(!j.chord) cout << " | " << j.timeValue << "   ";
+			cout << j.notation.technical.string << "弦" << j.notation.technical.fret << "品";
+		}
+		cout << endl << endl;
 	}
-	/*for (cv::Mat& i : info) {
-		imshow("info",i);
-		cvWaitKey();
-	}
-	cvDestroyWindow("info");*/
-	/*for (cv::Mat& i : section) {
-		if(!i.empty()) imshow("section",i);
-		else std::cerr << "empty image in section" << std::endl;
-		cvWaitKey(0);
-	}
-	cvDestroyWindow("section");*/
-	/*for (cv::Mat& i : notes) {
-		imshow("notes",i);
-		cvWaitKey();
-	}*/
-	/*cvWaitKey(0);
-	cvDestroyAllWindows();*/
-
-	
-	/*saveNums("C:\\Users\\Administrator\\Desktop\\oh\\", nums);
-	system("pause");*/
-
-	/*for (cv::Mat& i : timeValue) {
-		std::vector<space> spaces;
-		duration(i, spaces);
-	}*/
+	system("pause");
 }
-

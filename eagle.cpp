@@ -38,7 +38,7 @@ void train(std::string save = defaultCSV) {
 	int num;															//num 是样本是什么数字
 	std::vector<std::string> fileList;
 	std::string path = "C:\\Users\\Administrator\\Desktop\\";
-	for (num = 0; num < 9; num++) {
+	for (num = 0; num < 10; num++) {
 		char c = num + '0';
 		ls((path + c).c_str(), fileList);
 		for (int i = 0; i < (int)fileList.size(); i++) {
