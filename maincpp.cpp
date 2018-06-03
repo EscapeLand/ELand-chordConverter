@@ -1,4 +1,5 @@
 #include"Cuckoo.h"
+using namespace std;
 #define mode 0  //0-main program  1-train  2-test
 
 int col;
@@ -177,8 +178,8 @@ int main() {
 				cut(toOCR, lines, 0, section, true);
 				cut(piece[i], lines, 0, origin, true);
 			}
-			for (int j = 0; j < section.size(); j++) {
-				measure newSec(origin[j],section[j],rows);
+			for (size_t j = 0; j < section.size(); j++) {
+				measure newSec(origin[j],section[j],rows,j);
 				sections.push_back(newSec);
 			}
 		}
@@ -192,7 +193,7 @@ int main() {
 	//saveNums("C:\\Users\\Administrator\\Desktop\\oh", nums);
 	//system("pause");
 
-	system("pause");
+	/*system("pause");
 	system("cls");
 	for (measure &i : sections) {
 		for (note &j : i.notes) {
@@ -201,5 +202,10 @@ int main() {
 		}
 		cout << endl << endl;
 	}
-	system("pause");
+	system("pause");*/
+	saveDoc finish("","","","","chordConverter","Escapeland");
+	for (measure& i : sections) {
+		finish.saveMeasure(i);
+	}
+	finish.save("newTab.xml");
 }
