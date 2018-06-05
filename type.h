@@ -71,8 +71,7 @@ public:
 
 class saveDoc {
 private:
-	tinyxml2::XMLDocument doc;
-	tinyxml2::XMLElement* part;
+	tinyxml2::XMLDocument backup;
 public:
 	saveDoc(const char* title, const char* composer, const char* lyricist, const char* artist, const char* tabber, const char* irights);
 	int save(const char* xmlPath);

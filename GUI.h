@@ -15,6 +15,7 @@ return this->##na;\
 Dgetter(na,ty)\
 Dsetter(na,ty)
 
+#define GWL_WNDPROC         (-4)
 #define CLR_DEFAULT             0xFF000000L
 #define PBS_SMOOTH              0x01
 #define PBM_SETRANGE            (WM_USER+1)
@@ -617,7 +618,7 @@ public:
 		this->Event_Timer = Event;
 		this->Interval = interval;
 		this->parent = parent;
-		this->id = ((form*)t)->tab.size();
+		this->id = (int)((form*)t)->tab.size();
 		((form*)t)->tab.push_back(this);
 		this->enabled.setContainer(this);
 		this->interval.setContainer(this);

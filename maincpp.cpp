@@ -1,4 +1,7 @@
+#pragma once
+
 #include"Cuckoo.h"
+#include "swan.h"
 using namespace std;
 #define mode 0  //0-main program  1-train  2-test
 
@@ -149,13 +152,12 @@ int main() {
 	}
 	
 	
-
+	int k = 1;
 	for (int i = 0; i <= n; i++) {
 		if (piece[i].empty()) continue;
 		std::vector<cv::Vec4i> rows;
 		int thick = 0;
 		findRow(piece[i], CV_PI / 18, rows,thick);
-		
 		if (rows.size() > 5) {
 			flag = true;
 			chords.push_back(piece[i]);
@@ -179,7 +181,7 @@ int main() {
 				cut(piece[i], lines, 0, origin, true);
 			}
 			for (size_t j = 0; j < section.size(); j++) {
-				measure newSec(origin[j],section[j],rows,j);
+				measure newSec(origin[j],section[j],rows,(int)k++);
 				sections.push_back(newSec);
 			}
 		}
@@ -203,7 +205,7 @@ int main() {
 		cout << endl << endl;
 	}
 	system("pause");*/
-	saveDoc finish("","","","","chordConverter","Escapeland");
+	saveDoc finish("unknown","unknown","unknown","unknown","chordConverter","Escapeland");
 	for (measure& i : sections) {
 		finish.saveMeasure(i);
 	}
