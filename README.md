@@ -1,12 +1,12 @@
-#ELand-chordConverter
+# ELand-chordConverter
 
 本项目将于2018-6-15停止维护，之后由@YuanWangZhe开发后续功能.
 
-##将一张图片形式的吉他谱转换成MusicXML，便于用Guitar Pro之类的打谱软件读取修改。
+## 将一张图片形式的吉他谱转换成MusicXML，便于用Guitar Pro之类的打谱软件读取修改。
 
 实际上更常用的应该是，拿来一张六线谱，扫出来拿Guitar Pro导入听个响 :D
 
-#文件：
+# 文件：
 
 	Dodo.cpp 收集了图像处理函数
 	frmain.cpp 一个丑陋的GUI
@@ -19,7 +19,7 @@
 	myheader.h 函数声明汇总
 	swan.cpp 用以输出至XML
 
-#引用的项目：
+# 引用的项目：
 
 	OpenCV
 	tinyXML2
