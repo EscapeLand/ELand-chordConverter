@@ -6,6 +6,34 @@ using namespace tinyxml2;
 #define txts(x,s) XMLText* x##Text = doc.NewText(#s)
 #define txt(x) txts(x,x)
 
+static char* pitch(int string,int fret,const char* tuning,char* r,bool & up) {
+	char law[13] = "CCDDEFFGGAAB";
+	// 1 3 6 8 10
+	int i;
+	for (i = 0; i < 13; i++) {
+		if (law[i] == tuning[0]) break;
+	}
+	//此时i是音调的位置
+	int m = (i + fret) % 12;
+	r[0] = law[m];
+	r[1] = tuning[1] + (i + fret) / 12;
+	r[2] = 0;
+	switch (m)
+	{
+	case 1:
+	case 3:
+	case 6:
+	case 8:
+	case 10:
+		up = true;
+		break;
+	default:
+		up = false;
+		break;
+	}
+	return r;
+}
+
 static void CopyNode(tinyxml2::XMLDocument *desdoc, const tinyxml2::XMLDocument *srcdoc)
 {
 	// Protect from evil
@@ -23,15 +51,17 @@ static void CopyNode(tinyxml2::XMLDocument *desdoc, const tinyxml2::XMLDocument 
 inline saveDoc::saveDoc(const char* title, const char* composer, const char* lyricist, const char* artist, const char* tabber, const char* irights)
 {
 	XMLDocument doc;
-	doc.Parse("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
-		"<!DOCTYPE score-partwise PUBLIC \" -//Recordare//DTD MusicXML 2.0 Partwise//EN\" \"/musicxml20/partwise.dtd\">");
+	doc.Parse("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+		"<!DOCTYPE score-partwise PUBLIC '-//Recordare//DTD MusicXML 2.0 Partwise//EN' 'http://www.musicxml.org/dtds/2.0/partwise.dtd'>");
 	XMLElement* root = doc.NewElement("score-partwise");
 	doc.InsertEndChild(root);
+	root->SetAttribute("version","3.0");
 
 	ele(work);
 	XMLElement* workTitle = doc.NewElement("work-title");
 	txtx(title);
-	work->InsertEndChild(titleText);
+	work->InsertEndChild(workTitle);
+	workTitle->InsertEndChild(titleText);
 	root->InsertEndChild(work);
 
 	ele(identification);
@@ -62,7 +92,7 @@ inline saveDoc::saveDoc(const char* title, const char* composer, const char* lyr
 
 	ele(encoding);
 	ele(software);
-	XMLText* GP = doc.NewText("Guitar Pro");
+	XMLText* GP = doc.NewText("Guitar Pro 7");
 	software->InsertEndChild(GP);
 	encoding->InsertEndChild(software);
 
@@ -75,7 +105,9 @@ inline saveDoc::saveDoc(const char* title, const char* composer, const char* lyr
 	root->InsertEndChild(identification);
 
 	XMLElement* part_list = doc.NewElement("part-list");
+	root->InsertEndChild(part_list);
 	XMLElement* score_part = doc.NewElement("score-part");
+	part_list->InsertEndChild(score_part);
 	score_part->SetAttribute("id", "p0");
 	XMLElement* part_name = doc.NewElement("part-name");
 	XMLText* G = doc.NewText("Guitar");
@@ -83,28 +115,29 @@ inline saveDoc::saveDoc(const char* title, const char* composer, const char* lyr
 	score_part->InsertEndChild(part_name);
 
 	XMLElement* part_abbreviation = doc.NewElement("part-abbreviation");
-	XMLText* S_Gt = doc.NewText("S-Gt");
+	XMLText* S_Gt = doc.NewText("s.guit.");
 	part_abbreviation->InsertEndChild(S_Gt);
 	score_part->InsertEndChild(part_abbreviation);
 
 	XMLElement* score_instrument = doc.NewElement("score-instrument");
+	XMLElement* instrument_name = doc.NewElement("instrument-name");
 	score_instrument->SetAttribute("id", "i0");
 	score_part->InsertEndChild(score_instrument);
+	score_instrument->InsertEndChild(instrument_name);
 
 	XMLElement* midi_instrument = doc.NewElement("midi-instrument");
 	midi_instrument->SetAttribute("id", "i0");
+	
+	
 	XMLElement* midi_channel = doc.NewElement("midi-channel");
 	XMLElement* midi_program = doc.NewElement("midi-program");
 	ele(volume);
 	ele(pan);
-	txts(midi_channel, 1);
 	txts(midi_program, 26);
-	txts(volume, 0);
-	txts(pan, -90);
-	midi_channel->InsertEndChild(midi_channelText);
+	midi_channel->InsertEndChild(doc.NewText("1"));
 	midi_program->InsertEndChild(midi_programText);
-	volume->InsertEndChild(volumeText);
-	pan->InsertEndChild(panText);
+	volume->InsertEndChild(doc.NewText("80"));
+	pan->InsertEndChild(doc.NewText("0"));
 	midi_instrument->InsertEndChild(midi_channel);
 	midi_instrument->InsertEndChild(midi_program);
 	midi_instrument->InsertEndChild(volume);
@@ -161,29 +194,35 @@ inline void saveDoc::saveMeasure(measure toSave) {
 	time->InsertEndChild(beat_type);
 	attributes->InsertEndChild(time);
 
+	attributes->InsertEndChild(doc.NewElement("staves"))->InsertEndChild(doc.NewText("2"));
 	ele(clef);
 	ele(sign);
 	ele(line);
-	txt(TAB);
-	txts(l6, 6);
-	sign->InsertEndChild(TABText);
-	line->InsertEndChild(l6Text);
+	XMLElement* clef2 = doc.NewElement("clef");
+	attributes->InsertEndChild(clef2);
+	clef2->InsertEndChild(doc.NewElement("sign"))->InsertEndChild(doc.NewText("G"));
+	clef2->InsertEndChild(doc.NewElement("line"))->InsertEndChild(doc.NewText("2"));
+	clef2->SetAttribute("number", "1");
+
+	sign->InsertEndChild(doc.NewText("TAB"));
+	line->InsertEndChild(doc.NewText("5"));
+	attributes->InsertEndChild(clef);
+	clef->SetAttribute("number","2");
 	clef->InsertEndChild(sign);
 	clef->InsertEndChild(line);
+	
 
 	XMLElement* staff_details = doc.NewElement("staff-details");
 	XMLElement* staff_lines = doc.NewElement("staff-lines");
-	staff_lines->InsertEndChild(l6Text);
-	//±ê×¼µ÷ÏÒ
+	staff_lines->InsertEndChild(doc.NewText("6"));
+	//标准调弦
 
 	XMLElement* staff_tuning1 = doc.NewElement("staff-tuning");
 	staff_tuning1->SetAttribute("line", "1");
 	XMLElement* tuning_step1 = doc.NewElement("tuning-step");
 	XMLElement* tuning_octave1 = doc.NewElement("tuning-octave");
-	txt(E);
-	txts(l2, 2);
-	tuning_step1->InsertEndChild(EText);
-	tuning_octave1->InsertEndChild(l2Text);					//E2
+	tuning_step1->InsertEndChild(doc.NewText("E"));
+	tuning_octave1->InsertEndChild(doc.NewText("2"));					//E2
 	staff_tuning1->InsertEndChild(tuning_step1);
 	staff_tuning1->InsertEndChild(tuning_octave1);
 
@@ -191,20 +230,17 @@ inline void saveDoc::saveMeasure(measure toSave) {
 	staff_tuning2->SetAttribute("line", "2");
 	XMLElement* tuning_step2 = doc.NewElement("tuning-step");
 	XMLElement* tuning_octave2 = doc.NewElement("tuning-octave");
-	txt(A);
-	tuning_step2->InsertEndChild(AText);
-	tuning_octave2->InsertEndChild(l2Text);					//A2
-	staff_tuning1->InsertEndChild(tuning_step2);
-	staff_tuning1->InsertEndChild(tuning_octave2);
+	tuning_step2->InsertEndChild(doc.NewText("A"));
+	tuning_octave2->InsertEndChild(doc.NewText("2"));					//A2
+	staff_tuning2->InsertEndChild(tuning_step2);
+	staff_tuning2->InsertEndChild(tuning_octave2);
 
 	XMLElement* staff_tuning3 = doc.NewElement("staff-tuning");
 	staff_tuning3->SetAttribute("line", "3");
 	XMLElement* tuning_step3 = doc.NewElement("tuning-step");
 	XMLElement* tuning_octave3 = doc.NewElement("tuning-octave");
-	txt(D);
-	txts(l3, 3);
-	tuning_step3->InsertEndChild(DText);
-	tuning_octave3->InsertEndChild(l3Text);					//D3
+	tuning_step3->InsertEndChild(doc.NewText("D"));
+	tuning_octave3->InsertEndChild(doc.NewText("3"));					//D3
 	staff_tuning3->InsertEndChild(tuning_step3);
 	staff_tuning3->InsertEndChild(tuning_octave3);
 
@@ -212,9 +248,8 @@ inline void saveDoc::saveMeasure(measure toSave) {
 	staff_tuning4->SetAttribute("line", "4");
 	XMLElement* tuning_step4 = doc.NewElement("tuning-step");
 	XMLElement* tuning_octave4 = doc.NewElement("tuning-octave");
-	txt(G);
-	tuning_step4->InsertEndChild(GText);
-	tuning_octave4->InsertEndChild(l3Text);					//G3
+	tuning_step4->InsertEndChild(doc.NewText("G"));
+	tuning_octave4->InsertEndChild(doc.NewText("3"));					//G3
 	staff_tuning4->InsertEndChild(tuning_step4);
 	staff_tuning4->InsertEndChild(tuning_octave4);
 
@@ -222,9 +257,8 @@ inline void saveDoc::saveMeasure(measure toSave) {
 	staff_tuning5->SetAttribute("line", "5");
 	XMLElement* tuning_step5 = doc.NewElement("tuning-step");
 	XMLElement* tuning_octave5 = doc.NewElement("tuning-octave");
-	txt(B);
-	tuning_step5->InsertEndChild(BText);
-	tuning_octave5->InsertEndChild(l3Text);					//B3
+	tuning_step5->InsertEndChild(doc.NewText("B"));
+	tuning_octave5->InsertEndChild(doc.NewText("3"));					//B3
 	staff_tuning5->InsertEndChild(tuning_step5);
 	staff_tuning5->InsertEndChild(tuning_octave5);
 
@@ -232,9 +266,8 @@ inline void saveDoc::saveMeasure(measure toSave) {
 	staff_tuning6->SetAttribute("line", "6");
 	XMLElement* tuning_step6 = doc.NewElement("tuning-step");
 	XMLElement* tuning_octave6 = doc.NewElement("tuning-octave");
-	txts(l4, 4);
-	tuning_step6->InsertEndChild(EText);
-	tuning_octave6->InsertEndChild(l4Text);					//E4
+	tuning_step6->InsertEndChild(doc.NewText("E"));
+	tuning_octave6->InsertEndChild(doc.NewText("4"));					//E4
 	staff_tuning6->InsertEndChild(tuning_step6);
 	staff_tuning6->InsertEndChild(tuning_octave6);
 
@@ -247,6 +280,16 @@ inline void saveDoc::saveMeasure(measure toSave) {
 	staff_details->InsertEndChild(staff_tuning6);
 
 	attributes->InsertEndChild(staff_details);
+	XMLNode* staff_details2 = staff_details->DeepClone(&doc);
+	attributes->InsertEndChild(staff_details2);
+	staff_details->SetAttribute("number","1");
+	staff_details->NextSiblingElement("staff-details")->SetAttribute("number","2");
+
+	measure->InsertEndChild(attributes);
+
+	int sta = 1;
+keepnote:
+
 
 	XMLElement** notes = new XMLElement*[toSave.notes.size()];
 	XMLElement** pitchs = new XMLElement*[toSave.notes.size()];
@@ -260,22 +303,8 @@ inline void saveDoc::saveMeasure(measure toSave) {
 	XMLElement** frets = new XMLElement*[toSave.notes.size()];
 	XMLElement** strings = new XMLElement*[toSave.notes.size()];
 	XMLText** dur = new XMLText*[toSave.notes.size()];
-	XMLText** str = new XMLText*[toSave.notes.size()];
-	XMLText** fre = new XMLText*[toSave.notes.size()];
-	XMLElement* chords = doc.NewElement("chord");
-	ele(dynamics);
-	ele(f);
-	ele(voice);
-	txts(l0, 0);
-	voice->InsertEndChild(l0Text);
 
-	txt(quarter);
-	txt(eighth);
-	txts(l6th, 16th);
-	txts(l32th, 32th);
-	txts(l64th, 64th);
-
-	measure->InsertEndChild(attributes);
+	
 	for (size_t i = 0; i < toSave.notes.size(); i++) {
 		notes[i] = doc.NewElement("note");
 		pitchs[i] = doc.NewElement("pitch");
@@ -284,89 +313,96 @@ inline void saveDoc::saveMeasure(measure toSave) {
 		durations[i] = doc.NewElement("duration");
 		voices[i] = doc.NewElement("voice");
 		types[i] = doc.NewElement("type");
-		notations[i] = doc.NewElement("notation");
+		notations[i] = doc.NewElement("notations");
 		strings[i] = doc.NewElement("string");
 		frets[i] = doc.NewElement("fret");
 		technicals[i] = doc.NewElement("technical");
 
-		if (toSave.notes[i].chord) notes[i]->InsertEndChild(chords);
+		if (toSave.notes[i].chord) notes[i]->InsertEndChild(doc.NewElement("chord"));
+		char pi[2]; bool up;
 		switch (toSave.notes[i].notation.technical.string)
 		{
-		case 1:							//E2
-			steps[i]->InsertEndChild(EText);
-			octaves[i]->InsertEndChild(l2Text);
+		case 6:							//E2
+			pitch(toSave.notes[i].notation.technical.string, toSave.notes[i].notation.technical.fret, "E2", pi,up);
 			break;
-		case 2:							//A2
-			steps[i]->InsertEndChild(AText);
-			octaves[i]->InsertEndChild(l2Text);
+		case 5:							//A2
+			pitch(toSave.notes[i].notation.technical.string, toSave.notes[i].notation.technical.fret, "A2", pi,up);
 			break;
-		case 3:							//D3
-			steps[i]->InsertEndChild(DText);
-			octaves[i]->InsertEndChild(l3Text);
+		case 4:							//D3
+			pitch(toSave.notes[i].notation.technical.string, toSave.notes[i].notation.technical.fret, "D3", pi,up);
 			break;
-		case 4:							//G3
-			steps[i]->InsertEndChild(GText);
-			octaves[i]->InsertEndChild(l3Text);
+		case 3:							//G3
+			pitch(toSave.notes[i].notation.technical.string, toSave.notes[i].notation.technical.fret, "G3", pi,up);
 			break;
-		case 5:							//B3
-			steps[i]->InsertEndChild(BText);
-			octaves[i]->InsertEndChild(l3Text);
+		case 2:							//B3
+			pitch(toSave.notes[i].notation.technical.string, toSave.notes[i].notation.technical.fret, "B3", pi,up);
 			break;
-		case 6:							//E4
-			steps[i]->InsertEndChild(EText);
-			octaves[i]->InsertEndChild(l4Text);
+		case 1:							//E4
+			pitch(toSave.notes[i].notation.technical.string, toSave.notes[i].notation.technical.fret, "E4", pi,up);
 			break;
 		}
+		char qu[1];
+		qu[0] = pi[0];
+		//if (sta == 1) pi[1] = pi[1] + 1;
+		steps[i]->InsertEndChild(doc.NewText(qu));
+		octaves[i]->InsertEndChild(doc.NewText(&pi[1]));
 		pitchs[i]->InsertEndChild(steps[i]);
+		if (up) pitchs[i]->InsertEndChild(doc.NewElement("alter"))->InsertEndChild(doc.NewText("1"));
 		pitchs[i]->InsertEndChild(octaves[i]);
 		notes[i]->InsertEndChild(pitchs[i]);
 
 		//duration: 4:1024
 
-		char a[5];
-		_itoa_s(256 * toSave.notes[i].timeValue, a, 10);
+		char a[8] = "";
+		_itoa_s(1024 / toSave.time.beats * toSave.notes[i].timeValue, a, 10);
 		dur[i] = doc.NewText(a);
 		durations[i]->InsertEndChild(dur[i]);
-		notes[i]->InsertEndChild(voice);
+		notes[i]->InsertEndChild(durations[i]);
+		notes[i]->InsertEndChild(doc.NewElement("voice"))->InsertEndChild(doc.NewText(sta == 2 ? "5" : "1"));
 
 		switch (toSave.notes[i].timeValue)
 		{
 		case 4:
-			types[i]->InsertEndChild(quarterText);
+			types[i]->InsertEndChild(doc.NewText("quarter"));
 			break;
 		case 8:
-			types[i]->InsertEndChild(eighthText);
+			types[i]->InsertEndChild(doc.NewText("eighth"));
 			break;
 		case 16:
-			types[i]->InsertEndChild(l6thText);
+			types[i]->InsertEndChild(doc.NewText("16th"));
 			break;
 		case 32:
-			types[i]->InsertEndChild(l32thText);
+			types[i]->InsertEndChild(doc.NewText("32th"));
 			break;
 		case 64:
-			types[i]->InsertEndChild(l64thText);
+			types[i]->InsertEndChild(doc.NewText("64th"));
 			break;
 		default:
 			std::cerr << "timeValue unexpected value: " << (int)toSave.notes[i].timeValue << std::endl;
 			break;
 		}
 		notes[i]->InsertEndChild(types[i]);
-
+		notes[i]->InsertEndChild(doc.NewElement("stem"))->InsertEndChild(doc.NewText("up"));
+		_itoa_s(sta, a, 10);
+		notes[i]->InsertEndChild(doc.NewElement("staff"))->InsertEndChild(doc.NewText(a));
 		_itoa_s(toSave.notes[i].notation.technical.string, a, 10);
-		str[i] = doc.NewText(a);
-		strings[i]->InsertEndChild(str[i]);
+		strings[i]->InsertEndChild(doc.NewText(a));
 		_itoa_s(toSave.notes[i].notation.technical.fret, a, 10);
-		fre[i] = doc.NewText(a);
+
 		frets[i]->InsertEndChild(doc.NewText(a));
 
 		technicals[i]->InsertEndChild(strings[i]);
 		technicals[i]->InsertEndChild(frets[i]);
 		notations[i]->InsertEndChild(technicals[i]);
 
-		dynamics->InsertEndChild(f);
-		notations[i]->InsertEndChild(dynamics);
+		notations[i]->InsertEndChild(doc.NewElement("dynamics"))->InsertEndChild(doc.NewText("mf"));
 		notes[i]->InsertEndChild(notations[i]);
 		measure->InsertEndChild(notes[i]);
+	}
+	measure->InsertEndChild(doc.NewElement("backup"))->InsertEndChild(doc.NewElement("duration"))->InsertEndChild(doc.NewText("4096"));
+	if (sta < 2) {
+		sta++;
+		goto keepnote;
 	}
 	backup.Clear();
 	CopyNode(&backup, &doc);
@@ -382,6 +418,6 @@ inline void saveDoc::saveMeasure(measure toSave) {
 	delete[] frets;
 	delete[] strings;
 	delete[] dur;
-	delete[] str;
-	delete[] fre;
+
+	
 }

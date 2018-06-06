@@ -1,6 +1,8 @@
 #pragma once
 #include"type.h"
-
+#pragma  warning(disable : 4302)
+#pragma  warning(disable : 4311)
+#pragma  warning(disable : 4312)
 #define SUCCEED(x) (x>=0)
 //Dodo.cpp
 extern cv::Mat threshold(std::string);

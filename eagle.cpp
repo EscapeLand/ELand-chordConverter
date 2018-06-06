@@ -7,7 +7,7 @@
 #include <string> 
 #include <iostream>
 
-#define defaultCSV "tData.csv"
+#define defaultCSV "C:\\Users\\Administrator\\Desktop\\Project1\\tData.csv"
 
 using namespace cv;
 using namespace cv::ml;
@@ -20,6 +20,10 @@ int rec(Mat character,std::vector<int> &possible) {
 	character.reshape(1, 1).convertTo(tmp, CV_32FC1, 1.0 / 255.0);
 	static Ptr<KNearest> knn = KNearest::create();
 	knn = load(defaultCSV, knn);
+	if (!knn->isTrained()) {
+		//TODO£º¶ÁÈ¡´íÎó
+		return -1;
+	}
 	knn->findNearest(tmp, 5, res, neighbour);
 	possible.clear();
 	for (int j = 0; j < neighbour.rows; j++) {
@@ -67,6 +71,10 @@ Ptr<KNearest> &load(std::string csv, Ptr<KNearest> &knn) {
 	}
 	int K = 5;
 	Ptr<TrainData> trainData = TrainData::loadFromCSV(csv, 0, 0, -1);
+	if (trainData.empty()) {
+		//TODO: ¶ÁÈ¡´íÎó
+		return knn;
+	}
 	knn->setDefaultK(K);
 	knn->setIsClassifier(true);
 	Mat Label;

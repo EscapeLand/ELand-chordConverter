@@ -1,30 +1,57 @@
-#include "GUI.h"
-#include  <io.h>
+#include"GUI.h"
 
-std::string picPath = "";
-HINSTANCE hi;
-extern int threshold(void);
-form frmain((char*)"ELand", (char*)"二值化");
+form main("form", "E-Land Chord Converter");
+
+int pix;
+char f[MAX_PATH];
+
+button scan(&main, 560, 200, 112, 56, "Go!");
+Label info(&main, 0, 464, 560, 24, "");
+extern int go(std::string f);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR szCmdLine, int iCmdShow) {
-	hi = hInstance;
-	frmain.create();
-	button btngo(&frmain,240,56,112,72,(char*)"二值化");
-	Textbox txtpath(&frmain, 8, 136,560,28, (char*)"C:\\Users\\Administrator\\Desktop\\");
-	txtpath.Multiline = false;
-	btngo.create();
-	txtpath.create();
-	btngo.Event_On_Click = [](button* me) {
-		char s[MAXSIZE];
-		((Textbox*)frmain.tab[1])->value(s);
-		if (_access(s, 0) != -1)
+	main.create();
+	main.Event_Window_Resize = [](form* me) {
+		pix = me->w / 12;
+	};
+
+	scan.Event_On_Click = [](button* me) {
+		OPENFILENAME ofn;
+		ZeroMemory(&ofn, sizeof(ofn));
+		ofn.lStructSize = sizeof(ofn);
+		ofn.hwndOwner = main.hWnd;
+		ofn.lpstrDefExt = 0;
+		ofn.lpstrFile = f;
+		ofn.lpstrFile[0] = '\0';
+		ofn.nMaxFile = MAX_PATH;
+		ofn.lpstrFilter = "图片文件\0*.bmp;*.jpg;*.JPG;*.jpeg;*.png;*.gif\0\0";
+		ofn.nFilterIndex = 0;
+		ofn.lpstrInitialDir = 0;
+		ofn.lpstrTitle = "选择乐谱：";
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+		if (GetOpenFileName(&ofn))
 		{
-			picPath = s;
-			threshold();
+			info.name = f;
+			if (go(std::string(f)) == 0) {
+				info.name = "success";
+			}
 		}
 	};
-	frmain.Event_Load_Complete = [](form* me) {
-		me->resize(592,240);
+	button home(&main, 8, 0, 112, 56, "Home");
+	button history(&main, 8, 64, 112, 56, "History");
+	button setting(&main, 8, 128, 112, 56, "Settings");
+	button exit(&main, 8, 400, 112, 56, "Exit");
+
+	home.Event_On_Click = [](button* me) {
+		scan.show();
 	};
-	frmain.run();
-};
+
+	scan.create();
+	home.create();
+	history.create();
+	setting.create();
+	exit.create();
+	info.create();
+
+	main();
+}

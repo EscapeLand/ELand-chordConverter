@@ -38,7 +38,10 @@ inline void measure::recNum(cv::Mat section, std::vector<cv::Vec4i> rows) {
 			newNote.notation.technical.string = whichLine(tmp, rows);										//几何关系判断string
 			if (!newNote.notation.technical.string) continue;
 			newNote.notation.technical.fret = rec(number, newNote.possible);								//识别数字fret
-
+			if (!SUCCEED(newNote.notation.technical.fret)) {
+				//TODO: 识别错误
+				return;
+			}
 			newNote.pos = (tmp[0] + tmp[2]) / 2;
 			this->maxCharacterWidth = max(maxCharacterWidth, tmp[2] - tmp[0]);
 			this->noteBottom = max(noteBottom, tmp[3]);
@@ -105,6 +108,10 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 	while (!cont.size()) {
 		cv::Mat inv = 255 - Morphology(picValue, picValue.rows / tr++, false, true);
 		cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+		if (picValue.rows / tr < 2) {
+			imshow("2", picValue); cvWaitKey();
+			break;
+		}
 	}
 	for (int j = 0; j < cont[0].size(); j++) {
 		temp[0] = std::min(temp[0], cont[0][j].y);
