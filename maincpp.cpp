@@ -1,25 +1,48 @@
 #pragma once
 
+
 #include"Cuckoo.h"
 #include "swan.h"
 using namespace std;
 #define mode 0  //0-main program  1-train  2-test
 
 int col;
-int main() {
+
+void fname(const char* path,char* name) {
+	int start, end;
+	int n = (int)strnlen_s(path, 260);
+	for (int i = n - 1; i >= 0; i--) {
+		if (path[i] == '.' || path[i] == '\\') {
+			end = i;
+			for (i = i - 1; i >= 0; i--) {
+				if (path[i] == '\\') {
+					break;
+				}
+			}
+			start = i + 1;
+			goto copy;
+		}
+	}
+	strncpy(name,path,n);
+	return;
+copy:
+	strncpy(name, &path[start], end - start);
+	return;
+}
+
+int go(string f) {
 #if mode == 1
 	train();
 	return 0;
 #endif
-	std::string f;
 	size_t n;
 	int cutTimes;
 	bool flag = false, dog = false;
 	std::vector<space> coll;
 	std::vector<space> toCut;
 
-	std::cout << "Drag image here to start: "<< std::endl ;
-	std::cin >> f;
+	//std::cout << "Drag image here to start: "<< std::endl ;
+	//std::cin >> f;
 #if mode == 2
 	std::vector<int> poss;
 	std::cout << rec(cv::imread(f),poss) << std::endl;
@@ -151,7 +174,9 @@ int main() {
 		delete[] b;
 	}
 	
-	
+	for (int i = 0; i <= n; i++) {
+		piece[i] = trim(piece[i]);
+	}
 	int k = 1;
 	for (int i = 0; i <= n; i++) {
 		if (piece[i].empty()) continue;
@@ -205,9 +230,14 @@ int main() {
 		cout << endl << endl;
 	}
 	system("pause");*/
-	saveDoc finish("unknown","unknown","unknown","unknown","chordConverter","Escapeland");
+	char name[256] = "";
+	fname(f.c_str(),name);
+	saveDoc finish(name,"unknown","unknown","unknown","chordConverter","Escapeland");
 	for (measure& i : sections) {
 		finish.saveMeasure(i);
 	}
-	finish.save("newTab.xml");
+	string fn = name;
+	fn = fn + ".xml";
+	finish.save(fn.c_str());
+	return 0;
 }

@@ -1,11 +1,11 @@
 #include"GUI.h"
 
-form main("form", "E-Land Chord Converter");
+form main("form", "E-Land Chord Converter",240,240,960,528);
 
-int pix;
+int pix = 80;
 char f[MAX_PATH];
 
-button scan(&main, 560, 200, 112, 56, "Go!");
+button scan(&main, 5 * pix, 200, 112, 56, "Go!");
 Label info(&main, 0, 464, 560, 24, "");
 extern int go(std::string f);
 
@@ -13,6 +13,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR szCmdLine
 	main.create();
 	main.Event_Window_Resize = [](form* me) {
 		pix = me->w / 12;
+
 	};
 
 	scan.Event_On_Click = [](button* me) {
@@ -41,6 +42,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR szCmdLine
 			main.show();
 		}
 	};
+	main.Event_Load_Complete = [](form* me) {
+		pix = me->w / 12;
+	};
 	button home(&main, 8, 0, 112, 56, "Home");
 	button history(&main, 8, 64, 112, 56, "History");
 	button setting(&main, 8, 128, 112, 56, "Settings");
@@ -49,7 +53,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR szCmdLine
 	home.Event_On_Click = [](button* me) {
 		scan.show();
 	};
-
+	exit.Event_On_Click = [](button* me) {
+		void* p = me->parent;
+		((form*)p)->close();
+	};
 	scan.create();
 	home.create();
 	history.create();

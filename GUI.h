@@ -287,6 +287,9 @@ public:
 		UnregisterClassA(classname, hi);
 		return msg.wParam;
 	}
+	void close() {
+		PostMessage(hWnd, WM_CLOSE, 0, 0);
+	}
 	void* getControl(HWND controlHwnd);
 	//ÊÂ¼þ
 	void(*Event_On_Create)(form*) = NULL;
@@ -371,7 +374,7 @@ public:
 		this->parent = parent;
 		this->name = Name;
 		this->classname = "STATIC";
-		this->feature = this->feature | SS_NOTIFY;
+		this->feature = this->feature | SS_NOTIFY | BS_FLAT;
 	}
 	int create() {
 		control::create();
