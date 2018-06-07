@@ -96,7 +96,7 @@ inline void measure::recNum(cv::Mat section, std::vector<cv::Vec4i> rows) {
 inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id) {
 	this->id = id;
 	recNum(img, rows);
-	cv::Mat picValue = org(cv::Range(noteBottom + 1, img.rows), cv::Range::all()).clone();
+	cv::Mat picValue = org(cv::Range(max(noteBottom,rows[5][1]) + 1, img.rows), cv::Range::all()).clone();
 
 	std::vector<std::vector<cv::Point>> cont;
 	cv::Mat inv = 255 - Morphology(picValue, picValue.rows / 3, false, true);

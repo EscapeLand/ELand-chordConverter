@@ -35,6 +35,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR szCmdLine
 			if (go(std::string(f)) == 0) {
 				info.name = "success";
 			}
+			else {
+				info.name = "failure";
+			}
+			main.show();
 		}
 	};
 	button home(&main, 8, 0, 112, 56, "Home");
