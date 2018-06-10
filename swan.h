@@ -302,7 +302,6 @@ keepnote:
 	XMLElement** technicals = new XMLElement*[toSave.notes.size()];
 	XMLElement** frets = new XMLElement*[toSave.notes.size()];
 	XMLElement** strings = new XMLElement*[toSave.notes.size()];
-	XMLText** dur = new XMLText*[toSave.notes.size()];
 
 	
 	for (size_t i = 0; i < toSave.notes.size(); i++) {
@@ -355,27 +354,56 @@ keepnote:
 
 		char a[8] = "";
 		_itoa_s(1024 / toSave.time.beats * toSave.notes[i].timeValue, a, 10);
-		dur[i] = doc.NewText(a);
-		durations[i]->InsertEndChild(dur[i]);
+		durations[i]->InsertEndChild(doc.NewText(a));
 		notes[i]->InsertEndChild(durations[i]);
 		notes[i]->InsertEndChild(doc.NewElement("voice"))->InsertEndChild(doc.NewText(sta == 2 ? "5" : "1"));
 
 		switch (toSave.notes[i].timeValue)
 		{
+		case 1:
+			types[i]->InsertEndChild(doc.NewText("whole"));
+			break;
+		case 3:
+			types[i]->InsertEndChild(doc.NewText("half"));
+			notes[i]->InsertEndChild(doc.NewElement("dot"));
+			break;
+		case 2:
+			types[i]->InsertEndChild(doc.NewText("half"));
+			break;
+		case 6:
+			types[i]->InsertEndChild(doc.NewText("quarter"));
+			notes[i]->InsertEndChild(doc.NewElement("dot"));
+			break;
 		case 4:
 			types[i]->InsertEndChild(doc.NewText("quarter"));
+			break;
+		case 12:
+			types[i]->InsertEndChild(doc.NewText("eighth"));
+			notes[i]->InsertEndChild(doc.NewElement("dot"));
 			break;
 		case 8:
 			types[i]->InsertEndChild(doc.NewText("eighth"));
 			break;
+		case 24:
+			types[i]->InsertEndChild(doc.NewText("16th"));
+			notes[i]->InsertEndChild(doc.NewElement("dot"));
+			break;
 		case 16:
 			types[i]->InsertEndChild(doc.NewText("16th"));
+			break;
+		case 48:
+			types[i]->InsertEndChild(doc.NewText("32th"));
+			notes[i]->InsertEndChild(doc.NewElement("dot"));
 			break;
 		case 32:
 			types[i]->InsertEndChild(doc.NewText("32th"));
 			break;
-		case 64:
+		case 96:
 			types[i]->InsertEndChild(doc.NewText("64th"));
+			notes[i]->InsertEndChild(doc.NewElement("dot"));
+			break;
+		case 64:
+			notes[i]->InsertEndChild(doc.NewText("64th"));
 			break;
 		default:
 			std::cerr << "timeValue unexpected value: " << (int)toSave.notes[i].timeValue << std::endl;
@@ -417,7 +445,6 @@ keepnote:
 	delete[] technicals;
 	delete[] frets;
 	delete[] strings;
-	delete[] dur;
 
 	
 }

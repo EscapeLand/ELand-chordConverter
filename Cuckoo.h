@@ -13,6 +13,7 @@ inline void measure::recNum(cv::Mat section, std::vector<cv::Vec4i> rows) {
 	//imshow("2", section); cvWaitKey();
 	std::vector<std::vector<cv::Point>> cont;
 	cv::Mat inv = 255 - section;
+	//cvtColor(section, ccolor, CV_GRAY2BGR);
 	cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 	for (int q = 0; q < cont.size(); q++) {
 		cv::Vec4i tmp = { section.cols,section.rows,0,0 };
@@ -48,7 +49,7 @@ inline void measure::recNum(cv::Mat section, std::vector<cv::Vec4i> rows) {
 			this->notes.push_back(newNote);
 		}
 	}
-
+	
 	int t = maxCharacterWidth;
 	auto n = notes.end();
 	auto m = notes.end();
@@ -109,7 +110,7 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 		cv::Mat inv = 255 - Morphology(picValue, picValue.rows / tr++, false, true);
 		cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 		if (picValue.rows / tr < 2) {
-			imshow("2", picValue); cvWaitKey();
+			imshow("2", org); cvWaitKey();
 			break;
 		}
 	}
@@ -117,7 +118,8 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 		temp[0] = std::min(temp[0], cont[0][j].y);
 		temp[1] = std::max(temp[1], cont[0][j].y);
 	}
-	inv = 255 - Morphology(picValue, (temp[1] - temp[0]) / 3, false, true);
+	int predLen = temp[1] - temp[0];
+	inv = 255 - Morphology(picValue, predLen / 3, false, true);
 	cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 	//一个规模庞大。。。倾我毕生所学的筛选算法，去掉节拍记号再往下的乱七八糟的东西
 	auto m = cont.end();
@@ -149,9 +151,9 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 			tmp[1] = std::min(tmp[1], cont[i][j].y);
 			tmp[3] = std::max(tmp[3], cont[i][j].y);
 		}
-		int sum1 = 0, sum2 = 0;
-		bool lock1 = false, lock2 = false;
-		for (int y = tmp[1]; y < tmp[3]; y++)
+		int sum1 = 0, sum2 = 0, sum3 = 0;
+		bool lock1 = false, lock2 = false, lock3 = false;
+		for (int y = (tmp[1] + tmp[3]) / 2; y < tmp[3]; y++)
 		{
 			uchar *ptr1 = picValue.ptr<uchar>(y);
 			uchar *ptr2 = picValue.ptr<uchar>(y + 1);
@@ -187,9 +189,31 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 				}
 			}
 		}
+		for (int y = tmp[1]; y < tmp[3]; y++)
+		{
+			uchar *ptr1 = picValue.ptr<uchar>(y);
+			uchar *ptr2 = picValue.ptr<uchar>(y + 1);
+
+			if (ptr1[tmp[2] + 1] && !ptr2[tmp[2] + 1]) {
+				if (!lock3) {
+					lock3 = true;
+					y++;
+				}
+			}
+			else if (!ptr1[tmp[2] + 1] && ptr2[tmp[2] + 1]) {
+				if (lock2) {
+					sum3++;
+					lock3 = false;
+				}
+			}
+		}
 		if (lock1) sum1++;
 		if (lock2) sum2++;
-		time.push_back((int)(this->time.beat_type * pow(2, max(sum1, sum2))));
+		if (lock3) sum3++;
+		if (tmp[3] - tmp[1] <= predLen / 2 && !sum1 && !sum2) {
+			sum1--; sum2--;
+		}
+		time.push_back((int)(this->time.beat_type * pow(2, max(sum1, !sum3 && sum2 ? sum2 - 1 : sum2)) * (!sum3 && sum2 ? 1.5 : 1)));
 	}
 	for (int k = 0, i = 0; i < notes.size(); i++) {
 		if (notes[i].chord) {
@@ -197,7 +221,7 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 		}
 		else {
 			if (k == time.size()) {
-				imshow("2", picValue); cvWaitKey();
+				imshow("2", org); cvWaitKey();
 				cerr << "time 越界，自动跳出，建议检查该小节 notes 的 chord 划分" << endl;
 				break;
 			}

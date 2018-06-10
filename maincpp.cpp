@@ -57,30 +57,7 @@ int go(string f) {
 	}
 	cv::Mat trimmed = trim(img);
 	col = trimmed.cols;
-	//trimmed = Morphology(trimmed, trimmed.cols / 400, true, false);
-	//std::vector<std::vector<cv::Point>> cont;
-	//cv::Mat inv = 255 - trimmed;
-	//cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-	//cv::Mat ccolor;
-	//cvtColor(trimmed, ccolor, CV_GRAY2BGR);
-	//for (int q = 0; q < cont.size(); q++) {
-	//	cv::Vec4i tmp = { trimmed.cols,trimmed.rows,0,0 };
-	//	for (int k = 0; k < cont[q].size(); k++) {
-	//		tmp[0] = std::min(tmp[0], cont[q][k].x);
-	//		tmp[2] = std::max(tmp[2], cont[q][k].x);
-	//		tmp[1] = std::min(tmp[1], cont[q][k].y);
-	//		tmp[3] = std::max(tmp[3], cont[q][k].y);
-
-	//	}
-	//	//限定筛选
-	//	if (tmp[2] - tmp[0] > trimmed.cols /2)						//形状限定
-	//	{
-	//		rectangle(ccolor,cv::Point(tmp[0],tmp[1]),cv::Point(tmp[2],tmp[3]),cv::Scalar(0,0,255));
-	//	}
-	//}
-	//ccolor = perspect(ccolor, 960 * ccolor.cols / ccolor.rows, 960);
-	//imshow("2", ccolor); cvWaitKey();
-	//return 0;
+	
 	cutTimes = split(trimmed, coll);
 	if (cutTimes == 3) {
 		return 1;
@@ -188,10 +165,10 @@ int go(string f) {
 			chords.push_back(piece[i]);
 			//为OCR去掉横线
 			//用形态学腐蚀得到mask 将mask上的点置0
-			cv::Mat eroded, dilated;
-			cv::Mat hline = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(piece[i].cols / 30, 1));			//水平结构
-			erode(255 - piece[i], eroded, hline);																//腐蚀
-			dilate(eroded, dilated, hline);																		//膨胀
+			cv::Mat dilated;
+			dilated = 255 - Morphology(piece[i],piece[i].cols/50,true,true);
+			
+			//imshow("2", dilated); cvWaitKey();
 			toOCR = cv::max(dilated, piece[i]);
 			
 			std::vector<cv::Vec4i> lines;
