@@ -1,6 +1,7 @@
 #include"myheader.h"
 
 using namespace std;
+int count(cv::Mat img, cv::Vec4i range, int delta);
 
 inline void measure::recNum(cv::Mat section, std::vector<cv::Vec4i> rows) {
 	/*
@@ -79,7 +80,7 @@ inline void measure::recNum(cv::Mat section, std::vector<cv::Vec4i> rows) {
 				cerr << "fret合并：不可置信条件. 检查模型" << endl;
 			}
 			m->pos = (m->pos + n->pos) / 2;
-			m->notation.technical.fret = 10 * m->notation.technical.fret + n->notation.technical.fret;
+			m->notation.technical.fret = 10 + n->notation.technical.fret;
 			notes.erase(n);
 		}
 	}
@@ -111,7 +112,7 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 		cv::findContours(inv, cont, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 		if (picValue.rows / tr < 2) {
 			imshow("2", org); cvWaitKey();
-			break;
+			return;
 		}
 	}
 	for (int j = 0; j < cont[0].size(); j++) {
@@ -152,6 +153,7 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 			tmp[3] = std::max(tmp[3], cont[i][j].y);
 		}
 		int sum1 = 0, sum2 = 0, sum3 = 0;
+		
 		bool lock1 = false, lock2 = false, lock3 = false;
 		for (int y = (tmp[1] + tmp[3]) / 2; y < tmp[3]; y++)
 		{
@@ -201,7 +203,7 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 				}
 			}
 			else if (!ptr1[tmp[2] + 1] && ptr2[tmp[2] + 1]) {
-				if (lock2) {
+				if (lock3) {
 					sum3++;
 					lock3 = false;
 				}
@@ -210,6 +212,9 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 		if (lock1) sum1++;
 		if (lock2) sum2++;
 		if (lock3) sum3++;
+		/*sum1 = count(picValue, tmp, -2);
+		sum2 = count(picValue, tmp, 2);
+		sum3 = count(picValue, tmp, 1);*/
 		if (tmp[3] - tmp[1] <= predLen / 2 && !sum1 && !sum2) {
 			sum1--; sum2--;
 		}
@@ -228,4 +233,42 @@ inline measure::measure(cv::Mat org, cv::Mat img, vector<cv::Vec4i> rows,int id)
 			notes[i].timeValue = (Value)time[k++];
 		}
 	}
+	
+}
+
+int count(cv::Mat img,cv::Vec4i range,int delta) {
+	bool lock1 = false,lock2 = true;
+	int sum = 0,x = range[delta > 0 ? 2 : 0] + delta;
+	for (int y = (range[1] + range[3]) / 2; y < range[3]; y++)
+	{
+		uchar *ptr1 = img.ptr<uchar>(y);
+		//连续两个0 必为实心，sum++   一个0一个1 空心 等待下一个0再sum++  
+		if (!ptr1[x]) {
+			uchar *ptr2 = img.ptr<uchar>(y + 1);
+			if (!ptr2[x]) {
+				//实心
+				if (!lock1) {
+					sum++;						//实心立刻加一
+					lock1 = true;
+				}
+			}
+			else {
+				//空心
+				if (lock2) {
+					sum++;						//空心扫描到第二条线才加一
+					lock2 = false;
+				}
+				else {
+					lock2 = true;				//空心扫描到第一条线
+				}
+			}
+		}
+		else{
+			if (lock1) {
+				lock1 = false;					//遇到空白点才允许重新读取实心点
+			}
+		}
+	}
+	if (lock2) sum++;
+	return sum;
 }

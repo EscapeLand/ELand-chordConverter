@@ -56,6 +56,7 @@ int go(string f) {
 		return 1;
 	}
 	cv::Mat trimmed = trim(img);
+	//imshow("2", trimmed); cvWaitKey();
 	col = trimmed.cols;
 	
 	cutTimes = split(trimmed, coll);
@@ -167,7 +168,7 @@ int go(string f) {
 			//用形态学腐蚀得到mask 将mask上的点置0
 			cv::Mat dilated;
 			dilated = 255 - Morphology(piece[i],piece[i].cols/50,true,true);
-			
+			dilated = Morphology(dilated, 2, true, true);
 			//imshow("2", dilated); cvWaitKey();
 			toOCR = cv::max(dilated, piece[i]);
 			
