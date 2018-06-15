@@ -40,9 +40,6 @@ int go(string f) {
 	bool flag = false, dog = false;
 	std::vector<space> coll;
 	std::vector<space> toCut;
-
-	//std::cout << "Drag image here to start: "<< std::endl ;
-	//std::cin >> f;
 #if mode == 2
 	std::vector<int> poss;
 	std::cout << rec(cv::imread(f),poss) << std::endl;
@@ -50,6 +47,7 @@ int go(string f) {
 	return 0;
 #endif
 	cv::Mat img = threshold(f);
+	col = img.cols;
 	if (img.empty()) {
 		std::cout << "Wrong format." << std::endl;
 		system("pause");
@@ -57,7 +55,7 @@ int go(string f) {
 	}
 	cv::Mat trimmed = trim(img);
 	//imshow("2", trimmed); cvWaitKey();
-	col = trimmed.cols;
+	
 	
 	cutTimes = split(trimmed, coll);
 	if (cutTimes == 3) {
@@ -80,19 +78,20 @@ int go(string f) {
 	delete[] mm;
 	n = coll.size();
 	
+	/*cv::Mat ccolor;
+	cvtColor(trimmed, ccolor, CV_GRAY2BGR);*/
 	for (int i = 0; i < n; i++) {
 		if (r[i]) {
 			
-			/*cv::Mat ccolor;
-			cvtColor(trimmed, ccolor, CV_GRAY2BGR);
-			line(ccolor, CvPoint(0, coll[i].start), CvPoint(trimmed.cols, coll[i].start), CvScalar(0, 0, 255));
-			line(ccolor, CvPoint(0, coll[i].start + coll[i].length), CvPoint(trimmed.cols, coll[i].start + coll[i].length), CvScalar(0, 0, 255));
-			imshow("2", ccolor); cvWaitKey();*/
 			
+			/*line(ccolor, CvPoint(0, coll[i].start), CvPoint(trimmed.cols, coll[i].start), CvScalar(0, 0, 255));
+			line(ccolor, CvPoint(0, coll[i].start + coll[i].length), CvPoint(trimmed.cols, coll[i].start + coll[i].length), CvScalar(0, 0, 255));
+			
+			*/
 			toCut.push_back(coll[i]);
 		}
 	}
-	
+	//imwrite("as.jpg",ccolor);
 	if (toCut.size() > 2) {
 		std::cout << "过滤算法正常" << std::endl;
 		coll.clear();
@@ -183,8 +182,12 @@ int go(string f) {
 				cut(toOCR, lines, 0, section, true);
 				cut(piece[i], lines, 0, origin, true);
 			}
+			
 			for (size_t j = 0; j < section.size(); j++) {
-				measure newSec(origin[j],section[j],rows,(int)k++);
+				measure newSec(origin[j],section[j],rows,(int)k);
+				if (SUCCEED(newSec.id)) {
+					k++;
+				}
 				sections.push_back(newSec);
 			}
 		}
@@ -212,7 +215,7 @@ int go(string f) {
 	fname(f.c_str(),name);
 	saveDoc finish(name,"unknown","unknown","unknown","chordConverter","Escapeland");
 	for (measure& i : sections) {
-		finish.saveMeasure(i);
+		if(SUCCEED(i.id)) finish.saveMeasure(i);
 	}
 	string fn = name;
 	fn = fn + ".xml";

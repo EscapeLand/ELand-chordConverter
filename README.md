@@ -1,6 +1,6 @@
-# ELand-chordConverter
+﻿# ELand-chordConverter
 
-本项目将于2018-6-15停止维护，之后由@YuanWangZhe开发后续功能.
+本项目将于2018-6-22停止维护，之后由@YuanWangZhe开发后续功能.
 
 ## 将一张图片形式的吉他谱转换成MusicXML，便于用Guitar Pro之类的打谱软件读取修改。
 

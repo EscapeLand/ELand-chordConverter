@@ -35,7 +35,7 @@ typedef struct notations {
 
 typedef struct note {
 	bool chord = false;							//和声标记，为true与上一个音符同时发声
-	std::vector<int> possible;						//其他可能的品数
+	std::vector<int> possible;					//其他可能的品数
 	Value timeValue = quarter;					//时值
 	bool dot = false;							//附点
 	int voice = 1;								//发声类型
@@ -61,7 +61,7 @@ private:
 	int maxCharacterWidth = 0;
 	void recNum(cv::Mat section, std::vector<cv::Vec4i> rows);
 public:
-	unsigned int id;
+	int id;
 	unsigned int number;						//小节数
 	Time time;
 	std::vector<note> notes;
